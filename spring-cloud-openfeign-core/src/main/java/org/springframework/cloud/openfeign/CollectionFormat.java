@@ -34,6 +34,7 @@ public @interface CollectionFormat {
 	/**
 	 * Allows setting the {@link feign.CollectionFormat} to be used while processing the
 	 * annotated method.
+	 *
 	 * @return the {@link feign.CollectionFormat} to be used
 	 */
 	feign.CollectionFormat value();
