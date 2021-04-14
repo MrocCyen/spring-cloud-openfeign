@@ -45,6 +45,7 @@ public @interface FeignClient {
 	 * The name of the service with optional protocol prefix. Synonym for {@link #name()
 	 * name}. A name must be specified for all clients, whether or not a url is provided.
 	 * Can be specified as property key, eg: ${propertyKey}.
+	 *
 	 * @return the name of the service with optional protocol prefix
 	 */
 	@AliasFor("name")
@@ -52,8 +53,9 @@ public @interface FeignClient {
 
 	/**
 	 * The service id with optional protocol prefix. Synonym for {@link #value() value}.
-	 * @deprecated use {@link #name() name} instead
+	 *
 	 * @return the service id with optional protocol prefix
+	 * @deprecated use {@link #name() name} instead
 	 */
 	@Deprecated
 	String serviceId() default "";
@@ -61,6 +63,8 @@ public @interface FeignClient {
 	/**
 	 * This will be used as the bean name instead of name if present, but will not be used
 	 * as a service id.
+	 * todo 如果存在的话用作bean的name
+	 *
 	 * @return bean name instead of name if present
 	 */
 	String contextId() default "";
@@ -75,7 +79,7 @@ public @interface FeignClient {
 	/**
 	 * @return the <code>@Qualifier</code> value for the feign client.
 	 * @deprecated in favour of {@link #qualifiers()}.
-	 *
+	 * <p>
 	 * If both {@link #qualifier()} and {@link #qualifiers()} are present, we will use the
 	 * latter, unless the array returned by {@link #qualifiers()} is empty or only
 	 * contains <code>null</code> or whitespace values, in which case we'll fall back
@@ -87,7 +91,7 @@ public @interface FeignClient {
 
 	/**
 	 * @return the <code>@Qualifiers</code> value for the feign client.
-	 *
+	 * <p>
 	 * If both {@link #qualifier()} and {@link #qualifiers()} are present, we will use the
 	 * latter, unless the array returned by {@link #qualifiers()} is empty or only
 	 * contains <code>null</code> or whitespace values, in which case we'll fall back
@@ -111,14 +115,16 @@ public @interface FeignClient {
 	 * <code>@Bean</code> definition for the pieces that make up the client, for instance
 	 * {@link feign.codec.Decoder}, {@link feign.codec.Encoder}, {@link feign.Contract}.
 	 *
-	 * @see FeignClientsConfiguration for the defaults
 	 * @return list of configurations for feign client
+	 * @see FeignClientsConfiguration for the defaults
 	 */
 	Class<?>[] configuration() default {};
 
 	/**
 	 * Fallback class for the specified Feign client interface. The fallback class must
 	 * implement the interface annotated by this annotation and be a valid spring bean.
+	 * todo 这个类必须继承注解了@FeignClient的类，并且是spring管理的bean
+	 *
 	 * @return fallback class for the specified Feign client interface
 	 */
 	Class<?> fallback() default void.class;
@@ -127,14 +133,17 @@ public @interface FeignClient {
 	 * Define a fallback factory for the specified Feign client interface. The fallback
 	 * factory must produce instances of fallback classes that implement the interface
 	 * annotated by {@link FeignClient}. The fallback factory must be a valid spring bean.
+	 * todo 这个工厂类必须可以创建注解了@FeignClient的类，并且是spring管理的bean
 	 *
+	 * @return fallback factory for the specified Feign client interface
 	 * @see feign.hystrix.FallbackFactory for details.
 	 * @see FallbackFactory for details.
-	 * @return fallback factory for the specified Feign client interface
 	 */
 	Class<?> fallbackFactory() default void.class;
 
 	/**
+	 * todo 当前feign接口每个请求的url前缀
+	 *
 	 * @return path prefix to be used by all method-level mappings. Can be used with or
 	 * without <code>@RibbonClient</code>.
 	 */
