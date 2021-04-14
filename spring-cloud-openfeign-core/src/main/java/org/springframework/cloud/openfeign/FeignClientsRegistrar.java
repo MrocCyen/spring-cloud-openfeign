@@ -168,8 +168,8 @@ class FeignClientsRegistrar implements ImportBeanDefinitionRegistrar, ResourceLo
 			} else {
 				name = "default." + metadata.getClassName();
 			}
-			//注册一个名为default.FeignClient的NamedContextFactory.Specification
-			//后面会创建一个名为default.FeignClient的上下文
+			//注册一个名为default.@EnableFeignClients注解类的名称的NamedContextFactory.Specification
+			//后面会创建一个名为default.@EnableFeignClients注解类的名称的上下文
 			registerClientConfiguration(registry, name, defaultAttrs.get("defaultConfiguration"));
 		}
 	}
