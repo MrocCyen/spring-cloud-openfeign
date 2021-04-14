@@ -64,7 +64,7 @@ import org.springframework.util.StringUtils;
  * @author Marcin Grzejszczak
  */
 public class FeignClientFactoryBean implements FactoryBean<Object>, InitializingBean,
-		ApplicationContextAware, BeanFactoryAware {
+	ApplicationContextAware, BeanFactoryAware {
 
 	/***********************************
 	 * WARNING! Nothing in this class should be @Autowired. It causes NPEs because of some
@@ -111,11 +111,11 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 
 		// @formatter:off
 		Feign.Builder builder = get(context, Feign.Builder.class)
-				// required values
-				.logger(logger)
-				.encoder(get(context, Encoder.class))
-				.decoder(get(context, Decoder.class))
-				.contract(get(context, Contract.class));
+			// required values
+			.logger(logger)
+			.encoder(get(context, Encoder.class))
+			.decoder(get(context, Decoder.class))
+			.contract(get(context, Contract.class));
 		// @formatter:on
 
 		configureFeign(context, builder);
@@ -126,48 +126,46 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 
 	private void applyBuildCustomizers(FeignContext context, Feign.Builder builder) {
 		Map<String, FeignBuilderCustomizer> customizerMap = context
-				.getInstances(contextId, FeignBuilderCustomizer.class);
+			.getInstances(contextId, FeignBuilderCustomizer.class);
 
 		if (customizerMap != null) {
 			customizerMap.values().stream()
-					.sorted(AnnotationAwareOrderComparator.INSTANCE)
-					.forEach(feignBuilderCustomizer -> feignBuilderCustomizer
-							.customize(builder));
+				.sorted(AnnotationAwareOrderComparator.INSTANCE)
+				.forEach(feignBuilderCustomizer -> feignBuilderCustomizer
+					.customize(builder));
 		}
 	}
 
 	protected void configureFeign(FeignContext context, Feign.Builder builder) {
 		FeignClientProperties properties = beanFactory != null
-				? beanFactory.getBean(FeignClientProperties.class)
-				: applicationContext.getBean(FeignClientProperties.class);
+			? beanFactory.getBean(FeignClientProperties.class)
+			: applicationContext.getBean(FeignClientProperties.class);
 
 		FeignClientConfigurer feignClientConfigurer = getOptional(context,
-				FeignClientConfigurer.class);
+			FeignClientConfigurer.class);
 		setInheritParentContext(feignClientConfigurer.inheritParentConfiguration());
 
 		if (properties != null && inheritParentContext) {
 			if (properties.isDefaultToProperties()) {
 				configureUsingConfiguration(context, builder);
 				configureUsingProperties(
-						properties.getConfig().get(properties.getDefaultConfig()),
-						builder);
+					properties.getConfig().get(properties.getDefaultConfig()),
+					builder);
 				configureUsingProperties(properties.getConfig().get(contextId), builder);
-			}
-			else {
+			} else {
 				configureUsingProperties(
-						properties.getConfig().get(properties.getDefaultConfig()),
-						builder);
+					properties.getConfig().get(properties.getDefaultConfig()),
+					builder);
 				configureUsingProperties(properties.getConfig().get(contextId), builder);
 				configureUsingConfiguration(context, builder);
 			}
-		}
-		else {
+		} else {
 			configureUsingConfiguration(context, builder);
 		}
 	}
 
 	protected void configureUsingConfiguration(FeignContext context,
-			Feign.Builder builder) {
+	                                           Feign.Builder builder) {
 		Logger.Level level = getInheritedAwareOptional(context, Logger.Level.class);
 		if (level != null) {
 			builder.logLevel(level);
@@ -177,20 +175,19 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 			builder.retryer(retryer);
 		}
 		ErrorDecoder errorDecoder = getInheritedAwareOptional(context,
-				ErrorDecoder.class);
+			ErrorDecoder.class);
 		if (errorDecoder != null) {
 			builder.errorDecoder(errorDecoder);
-		}
-		else {
+		} else {
 			FeignErrorDecoderFactory errorDecoderFactory = getOptional(context,
-					FeignErrorDecoderFactory.class);
+				FeignErrorDecoderFactory.class);
 			if (errorDecoderFactory != null) {
 				ErrorDecoder factoryErrorDecoder = errorDecoderFactory.create(type);
 				builder.errorDecoder(factoryErrorDecoder);
 			}
 		}
 		Request.Options options = getInheritedAwareOptional(context,
-				Request.Options.class);
+			Request.Options.class);
 		if (options != null) {
 			builder.options(options);
 			readTimeoutMillis = options.readTimeoutMillis();
@@ -198,15 +195,15 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 			followRedirects = options.isFollowRedirects();
 		}
 		Map<String, RequestInterceptor> requestInterceptors = getInheritedAwareInstances(
-				context, RequestInterceptor.class);
+			context, RequestInterceptor.class);
 		if (requestInterceptors != null) {
 			List<RequestInterceptor> interceptors = new ArrayList<>(
-					requestInterceptors.values());
+				requestInterceptors.values());
 			AnnotationAwareOrderComparator.sort(interceptors);
 			builder.requestInterceptors(interceptors);
 		}
 		QueryMapEncoder queryMapEncoder = getInheritedAwareOptional(context,
-				QueryMapEncoder.class);
+			QueryMapEncoder.class);
 		if (queryMapEncoder != null) {
 			builder.queryMapEncoder(queryMapEncoder);
 		}
@@ -214,15 +211,15 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 			builder.decode404();
 		}
 		ExceptionPropagationPolicy exceptionPropagationPolicy = getInheritedAwareOptional(
-				context, ExceptionPropagationPolicy.class);
+			context, ExceptionPropagationPolicy.class);
 		if (exceptionPropagationPolicy != null) {
 			builder.exceptionPropagationPolicy(exceptionPropagationPolicy);
 		}
 	}
 
 	protected void configureUsingProperties(
-			FeignClientProperties.FeignClientConfiguration config,
-			Feign.Builder builder) {
+		FeignClientProperties.FeignClientConfiguration config,
+		Feign.Builder builder) {
 		if (config == null) {
 			return;
 		}
@@ -232,14 +229,14 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 		}
 
 		connectTimeoutMillis = config.getConnectTimeout() != null
-				? config.getConnectTimeout() : connectTimeoutMillis;
+			? config.getConnectTimeout() : connectTimeoutMillis;
 		readTimeoutMillis = config.getReadTimeout() != null ? config.getReadTimeout()
-				: readTimeoutMillis;
+			: readTimeoutMillis;
 		followRedirects = config.isFollowRedirects() != null ? config.isFollowRedirects()
-				: followRedirects;
+			: followRedirects;
 
 		builder.options(new Request.Options(connectTimeoutMillis, TimeUnit.MILLISECONDS,
-				readTimeoutMillis, TimeUnit.MILLISECONDS, followRedirects));
+			readTimeoutMillis, TimeUnit.MILLISECONDS, followRedirects));
 
 		if (config.getRetryer() != null) {
 			Retryer retryer = getOrInstantiate(config.getRetryer());
@@ -252,7 +249,7 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 		}
 
 		if (config.getRequestInterceptors() != null
-				&& !config.getRequestInterceptors().isEmpty()) {
+			&& !config.getRequestInterceptors().isEmpty()) {
 			// this will add request interceptor to builder, not replace existing
 			for (Class<RequestInterceptor> bean : config.getRequestInterceptors()) {
 				RequestInterceptor interceptor = getOrInstantiate(bean);
@@ -272,12 +269,12 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 
 		if (Objects.nonNull(config.getDefaultRequestHeaders())) {
 			builder.requestInterceptor(requestTemplate -> requestTemplate
-					.headers(config.getDefaultRequestHeaders()));
+				.headers(config.getDefaultRequestHeaders()));
 		}
 
 		if (Objects.nonNull(config.getDefaultQueryParameters())) {
 			builder.requestInterceptor(requestTemplate -> requestTemplate
-					.queries(config.getDefaultQueryParameters()));
+				.queries(config.getDefaultQueryParameters()));
 		}
 
 		if (Objects.nonNull(config.getDecoder())) {
@@ -296,9 +293,8 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 	private <T> T getOrInstantiate(Class<T> tClass) {
 		try {
 			return beanFactory != null ? beanFactory.getBean(tClass)
-					: applicationContext.getBean(tClass);
-		}
-		catch (NoSuchBeanDefinitionException e) {
+				: applicationContext.getBean(tClass);
+		} catch (NoSuchBeanDefinitionException e) {
 			return BeanUtils.instantiateClass(tClass);
 		}
 	}
@@ -307,7 +303,7 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 		T instance = context.getInstance(contextId, type);
 		if (instance == null) {
 			throw new IllegalStateException(
-					"No bean found of type " + type + " for " + contextId);
+				"No bean found of type " + type + " for " + contextId);
 		}
 		return instance;
 	}
@@ -319,24 +315,22 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 	protected <T> T getInheritedAwareOptional(FeignContext context, Class<T> type) {
 		if (inheritParentContext) {
 			return getOptional(context, type);
-		}
-		else {
+		} else {
 			return context.getInstanceWithoutAncestors(contextId, type);
 		}
 	}
 
 	protected <T> Map<String, T> getInheritedAwareInstances(FeignContext context,
-			Class<T> type) {
+	                                                        Class<T> type) {
 		if (inheritParentContext) {
 			return context.getInstances(contextId, type);
-		}
-		else {
+		} else {
 			return context.getInstancesWithoutAncestors(contextId, type);
 		}
 	}
 
 	protected <T> T loadBalance(Feign.Builder builder, FeignContext context,
-			HardCodedTarget<T> target) {
+	                            HardCodedTarget<T> target) {
 		Client client = getOptional(context, Client.class);
 		if (client != null) {
 			builder.client(client);
@@ -345,7 +339,7 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 		}
 
 		throw new IllegalStateException(
-				"No Feign Client for loadBalancing defined. Did you forget to include spring-cloud-starter-netflix-ribbon?");
+			"No Feign Client for loadBalancing defined. Did you forget to include spring-cloud-starter-netflix-ribbon?");
 	}
 
 	@Override
@@ -360,20 +354,19 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 	 */
 	<T> T getTarget() {
 		FeignContext context = beanFactory != null
-				? beanFactory.getBean(FeignContext.class)
-				: applicationContext.getBean(FeignContext.class);
+			? beanFactory.getBean(FeignContext.class)
+			: applicationContext.getBean(FeignContext.class);
 		Feign.Builder builder = feign(context);
 
 		if (!StringUtils.hasText(url)) {
 			if (!name.startsWith("http")) {
 				url = "http://" + name;
-			}
-			else {
+			} else {
 				url = name;
 			}
 			url += cleanPath();
 			return (T) loadBalance(builder, context,
-					new HardCodedTarget<>(type, name, url));
+				new HardCodedTarget<>(type, name, url));
 		}
 		if (StringUtils.hasText(url) && !url.startsWith("http")) {
 			url = "http://" + url;
@@ -395,13 +388,13 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 				// not load balancing because we have a url,
 				// but Spring Cloud LoadBalancer is on the classpath, so unwrap
 				client = ((RetryableFeignBlockingLoadBalancerClient) client)
-						.getDelegate();
+					.getDelegate();
 			}
 			builder.client(client);
 		}
 		Targeter targeter = get(context, Targeter.class);
 		return (T) targeter.target(this, builder, context,
-				new HardCodedTarget<>(type, name, url));
+			new HardCodedTarget<>(type, name, url));
 	}
 
 	private String cleanPath() {
@@ -519,40 +512,40 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 		}
 		FeignClientFactoryBean that = (FeignClientFactoryBean) o;
 		return Objects.equals(applicationContext, that.applicationContext)
-				&& Objects.equals(beanFactory, that.beanFactory)
-				&& decode404 == that.decode404
-				&& inheritParentContext == that.inheritParentContext
-				&& Objects.equals(fallback, that.fallback)
-				&& Objects.equals(fallbackFactory, that.fallbackFactory)
-				&& Objects.equals(name, that.name) && Objects.equals(path, that.path)
-				&& Objects.equals(type, that.type) && Objects.equals(url, that.url)
-				&& Objects.equals(connectTimeoutMillis, that.connectTimeoutMillis)
-				&& Objects.equals(readTimeoutMillis, that.readTimeoutMillis)
-				&& Objects.equals(followRedirects, that.followRedirects);
+			&& Objects.equals(beanFactory, that.beanFactory)
+			&& decode404 == that.decode404
+			&& inheritParentContext == that.inheritParentContext
+			&& Objects.equals(fallback, that.fallback)
+			&& Objects.equals(fallbackFactory, that.fallbackFactory)
+			&& Objects.equals(name, that.name) && Objects.equals(path, that.path)
+			&& Objects.equals(type, that.type) && Objects.equals(url, that.url)
+			&& Objects.equals(connectTimeoutMillis, that.connectTimeoutMillis)
+			&& Objects.equals(readTimeoutMillis, that.readTimeoutMillis)
+			&& Objects.equals(followRedirects, that.followRedirects);
 	}
 
 	@Override
 	public int hashCode() {
 		return Objects.hash(applicationContext, beanFactory, decode404,
-				inheritParentContext, fallback, fallbackFactory, name, path, type, url,
-				readTimeoutMillis, connectTimeoutMillis, followRedirects);
+			inheritParentContext, fallback, fallbackFactory, name, path, type, url,
+			readTimeoutMillis, connectTimeoutMillis, followRedirects);
 	}
 
 	@Override
 	public String toString() {
 		return new StringBuilder("FeignClientFactoryBean{").append("type=").append(type)
-				.append(", ").append("name='").append(name).append("', ").append("url='")
-				.append(url).append("', ").append("path='").append(path).append("', ")
-				.append("decode404=").append(decode404).append(", ")
-				.append("inheritParentContext=").append(inheritParentContext).append(", ")
-				.append("applicationContext=").append(applicationContext).append(", ")
-				.append("beanFactory=").append(beanFactory).append(", ")
-				.append("fallback=").append(fallback).append(", ")
-				.append("fallbackFactory=").append(fallbackFactory).append("}")
-				.append("connectTimeoutMillis=").append(connectTimeoutMillis).append("}")
-				.append("readTimeoutMillis=").append(readTimeoutMillis).append("}")
-				.append("followRedirects=").append(followRedirects).append("}")
-				.toString();
+			.append(", ").append("name='").append(name).append("', ").append("url='")
+			.append(url).append("', ").append("path='").append(path).append("', ")
+			.append("decode404=").append(decode404).append(", ")
+			.append("inheritParentContext=").append(inheritParentContext).append(", ")
+			.append("applicationContext=").append(applicationContext).append(", ")
+			.append("beanFactory=").append(beanFactory).append(", ")
+			.append("fallback=").append(fallback).append(", ")
+			.append("fallbackFactory=").append(fallbackFactory).append("}")
+			.append("connectTimeoutMillis=").append(connectTimeoutMillis).append("}")
+			.append("readTimeoutMillis=").append(readTimeoutMillis).append("}")
+			.append("followRedirects=").append(followRedirects).append("}")
+			.toString();
 	}
 
 	@Override

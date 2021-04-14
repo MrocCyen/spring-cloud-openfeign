@@ -90,6 +90,7 @@ class FeignClientsRegistrar implements ImportBeanDefinitionRegistrar, ResourceLo
 			+ "of fallback classes that implement the interface annotated by @FeignClient");
 	}
 
+	//todo 需要验证
 	static String getName(String name) {
 		if (!StringUtils.hasText(name)) {
 			return "";
@@ -103,11 +104,13 @@ class FeignClientsRegistrar implements ImportBeanDefinitionRegistrar, ResourceLo
 			} else {
 				url = name;
 			}
+			//验证name是否是合法的hostname
 			host = new URI(url).getHost();
-
 		} catch (URISyntaxException e) {
 		}
+
 		Assert.state(host != null, "Service id not legal hostname (" + name + ")");
+
 		return name;
 	}
 
@@ -191,9 +194,10 @@ class FeignClientsRegistrar implements ImportBeanDefinitionRegistrar, ResourceLo
 			scanner.addIncludeFilter(new AnnotationTypeFilter(FeignClient.class));
 			Set<String> basePackages = getBasePackages(metadata);
 			for (String basePackage : basePackages) {
+				//扫描所有的base包
 				candidateComponents.addAll(scanner.findCandidateComponents(basePackage));
 			}
-		} else {
+		} else {//配置了clients，不会执行扫描
 			for (Class<?> clazz : clients) {
 				candidateComponents.add(new AnnotatedGenericBeanDefinition(clazz));
 			}
@@ -206,70 +210,93 @@ class FeignClientsRegistrar implements ImportBeanDefinitionRegistrar, ResourceLo
 				AnnotationMetadata annotationMetadata = beanDefinition.getMetadata();
 				Assert.isTrue(annotationMetadata.isInterface(), "@FeignClient can only be specified on an interface");
 
+				//获取FeignClient注解上所有的值
 				Map<String, Object> attributes = annotationMetadata.getAnnotationAttributes(FeignClient.class.getCanonicalName());
 
+				//获取名称，查询顺序是：contextId->value->name->serviceId
 				String name = getClientName(attributes);
+				//注册一个名为name的NamedContextFactory.Specification
+				//后面会创建一个名为name的上下文
 				registerClientConfiguration(registry, name, attributes.get("configuration"));
 
+				//注册feign客户端
 				registerFeignClient(registry, annotationMetadata, attributes);
 			}
 		}
 	}
 
+	/**
+	 * 注册fegin客户端
+	 *
+	 * @param registry           注册容器
+	 * @param annotationMetadata 注解元数据
+	 * @param attributes         FeignClient注解配置的信息
+	 */
 	private void registerFeignClient(BeanDefinitionRegistry registry,
-	                                 AnnotationMetadata annotationMetadata, Map<String, Object> attributes) {
+	                                 AnnotationMetadata annotationMetadata,
+	                                 Map<String, Object> attributes) {
 		String className = annotationMetadata.getClassName();
+		//注解类类型
 		Class clazz = ClassUtils.resolveClassName(className, null);
-		ConfigurableBeanFactory beanFactory = registry instanceof ConfigurableBeanFactory
-			? (ConfigurableBeanFactory) registry : null;
+		ConfigurableBeanFactory beanFactory = registry instanceof ConfigurableBeanFactory ? (ConfigurableBeanFactory) registry : null;
+		//获取bean名称
 		String contextId = getContextId(beanFactory, attributes);
+		//获取服务名称
 		String name = getName(attributes);
+
 		FeignClientFactoryBean factoryBean = new FeignClientFactoryBean();
 		factoryBean.setBeanFactory(beanFactory);
 		factoryBean.setName(name);
 		factoryBean.setContextId(contextId);
 		factoryBean.setType(clazz);
-		BeanDefinitionBuilder definition = BeanDefinitionBuilder
-			.genericBeanDefinition(clazz, () -> {
-				factoryBean.setUrl(getUrl(beanFactory, attributes));
-				factoryBean.setPath(getPath(beanFactory, attributes));
-				factoryBean.setDecode404(Boolean
-					.parseBoolean(String.valueOf(attributes.get("decode404"))));
-				Object fallback = attributes.get("fallback");
-				if (fallback != null) {
-					factoryBean.setFallback(fallback instanceof Class
-						? (Class<?>) fallback
-						: ClassUtils.resolveClassName(fallback.toString(), null));
-				}
-				Object fallbackFactory = attributes.get("fallbackFactory");
-				if (fallbackFactory != null) {
-					factoryBean.setFallbackFactory(fallbackFactory instanceof Class
-						? (Class<?>) fallbackFactory
-						: ClassUtils.resolveClassName(fallbackFactory.toString(),
-						null));
-				}
-				return factoryBean.getObject();
-			});
+		BeanDefinitionBuilder definition = BeanDefinitionBuilder.genericBeanDefinition(clazz, () -> {
+			factoryBean.setUrl(getUrl(beanFactory, attributes));
+			factoryBean.setPath(getPath(beanFactory, attributes));
+			factoryBean.setDecode404(Boolean.parseBoolean(String.valueOf(attributes.get("decode404"))));
+			Object fallback = attributes.get("fallback");
+			if (fallback != null) {
+				factoryBean.setFallback(fallback instanceof Class
+					? (Class<?>) fallback
+					: ClassUtils.resolveClassName(fallback.toString(), null));
+			}
+			Object fallbackFactory = attributes.get("fallbackFactory");
+			if (fallbackFactory != null) {
+				factoryBean.setFallbackFactory(fallbackFactory instanceof Class
+					? (Class<?>) fallbackFactory
+					: ClassUtils.resolveClassName(fallbackFactory.toString(), null));
+			}
+
+			return factoryBean.getObject();
+		});
+
+		//注入模型是by_type
 		definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);
+		//懒加载
 		definition.setLazyInit(true);
+		//验证属性
+		//验证fallbackFactory不是接口
 		validate(attributes);
 
 		AbstractBeanDefinition beanDefinition = definition.getBeanDefinition();
+		//设置属性factoryBeanObjectType
 		beanDefinition.setAttribute(FactoryBean.OBJECT_TYPE_ATTRIBUTE, className);
+		//设置属性feignClientsRegistrarFactoryBean
 		beanDefinition.setAttribute("feignClientsRegistrarFactoryBean", factoryBean);
 
 		// has a default, won't be null
 		boolean primary = (Boolean) attributes.get("primary");
 
+		//设置primary
 		beanDefinition.setPrimary(primary);
 
+		//设置别名
 		String[] qualifiers = getQualifiers(attributes);
 		if (ObjectUtils.isEmpty(qualifiers)) {
 			qualifiers = new String[]{contextId + "FeignClient"};
 		}
 
-		BeanDefinitionHolder holder = new BeanDefinitionHolder(beanDefinition, className,
-			qualifiers);
+		//使用别名qualifiers进行注册
+		BeanDefinitionHolder holder = new BeanDefinitionHolder(beanDefinition, className, qualifiers);
 		BeanDefinitionReaderUtils.registerBeanDefinition(holder, registry);
 	}
 
@@ -281,7 +308,8 @@ class FeignClientsRegistrar implements ImportBeanDefinitionRegistrar, ResourceLo
 		validateFallbackFactory(annotation.getClass("fallbackFactory"));
 	}
 
-	/* for testing */ String getName(Map<String, Object> attributes) {
+	String getName(Map<String, Object> attributes) {
+		//传入bean工厂，null
 		return getName(null, attributes);
 	}
 
@@ -293,23 +321,28 @@ class FeignClientsRegistrar implements ImportBeanDefinitionRegistrar, ResourceLo
 		if (!StringUtils.hasText(name)) {
 			name = (String) attributes.get("value");
 		}
+
 		name = resolve(beanFactory, name);
+
 		return getName(name);
 	}
 
 	private String getContextId(ConfigurableBeanFactory beanFactory,
 	                            Map<String, Object> attributes) {
 		String contextId = (String) attributes.get("contextId");
+		//没有设置contextId
 		if (!StringUtils.hasText(contextId)) {
 			return getName(attributes);
 		}
-
+		//设置了contextId
 		contextId = resolve(beanFactory, contextId);
+
 		return getName(contextId);
 	}
 
 	private String resolve(ConfigurableBeanFactory beanFactory, String value) {
 		if (StringUtils.hasText(value)) {
+			//bean工厂为null，从环境中回去
 			if (beanFactory == null) {
 				return this.environment.resolvePlaceholders(value);
 			}
@@ -318,8 +351,7 @@ class FeignClientsRegistrar implements ImportBeanDefinitionRegistrar, ResourceLo
 			if (resolver == null) {
 				return resolved;
 			}
-			return String.valueOf(resolver.evaluate(resolved,
-				new BeanExpressionContext(beanFactory, null)));
+			return String.valueOf(resolver.evaluate(resolved, new BeanExpressionContext(beanFactory, null)));
 		}
 		return value;
 	}
