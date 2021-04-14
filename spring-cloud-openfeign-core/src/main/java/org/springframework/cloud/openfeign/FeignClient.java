@@ -63,6 +63,7 @@ public @interface FeignClient {
 	/**
 	 * This will be used as the bean name instead of name if present, but will not be used
 	 * as a service id.
+	 * <p>
 	 * todo 如果存在的话用作bean的name
 	 *
 	 * @return bean name instead of name if present
@@ -123,6 +124,7 @@ public @interface FeignClient {
 	/**
 	 * Fallback class for the specified Feign client interface. The fallback class must
 	 * implement the interface annotated by this annotation and be a valid spring bean.
+	 * <p>
 	 * todo 这个类必须继承注解了@FeignClient的类，并且是spring管理的bean
 	 *
 	 * @return fallback class for the specified Feign client interface
@@ -133,6 +135,7 @@ public @interface FeignClient {
 	 * Define a fallback factory for the specified Feign client interface. The fallback
 	 * factory must produce instances of fallback classes that implement the interface
 	 * annotated by {@link FeignClient}. The fallback factory must be a valid spring bean.
+	 * <p>
 	 * todo 这个工厂类必须可以创建注解了@FeignClient的类，并且是spring管理的bean
 	 *
 	 * @return fallback factory for the specified Feign client interface
