@@ -78,8 +78,7 @@ import org.springframework.data.domain.Sort;
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnClass(Feign.class)
-@EnableConfigurationProperties({ FeignClientProperties.class,
-		FeignHttpClientProperties.class, FeignEncoderProperties.class })
+@EnableConfigurationProperties({FeignClientProperties.class, FeignHttpClientProperties.class, FeignEncoderProperties.class})
 @Import(DefaultGzipDecoderConfiguration.class)
 public class FeignAutoConfiguration {
 
@@ -93,6 +92,9 @@ public class FeignAutoConfiguration {
 		return HasFeatures.namedFeature("Feign", Feign.class);
 	}
 
+	/**
+	 * 创建feign多容器工厂
+	 */
 	@Bean
 	public FeignContext feignContext() {
 		FeignContext context = new FeignContext();
@@ -101,9 +103,8 @@ public class FeignAutoConfiguration {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnClass({ Module.class, Page.class, Sort.class })
-	@ConditionalOnProperty(value = "feign.autoconfiguration.jackson.enabled",
-			havingValue = "true")
+	@ConditionalOnClass({Module.class, Page.class, Sort.class})
+	@ConditionalOnProperty(value = "feign.autoconfiguration.jackson.enabled", havingValue = "true")
 	protected static class FeignJacksonConfiguration {
 
 		@Bean
@@ -136,7 +137,7 @@ public class FeignAutoConfiguration {
 	@Conditional(FeignCircuitBreakerDisabledConditions.class)
 	@ConditionalOnClass(name = "feign.hystrix.HystrixFeign")
 	@ConditionalOnProperty(value = "feign.hystrix.enabled", havingValue = "true",
-			matchIfMissing = true)
+		matchIfMissing = true)
 	protected static class HystrixFeignTargeterConfiguration {
 
 		@Bean
@@ -156,7 +157,7 @@ public class FeignAutoConfiguration {
 		@ConditionalOnMissingBean
 		@ConditionalOnBean(CircuitBreakerFactory.class)
 		public Targeter circuitBreakerFeignTargeter(
-				CircuitBreakerFactory circuitBreakerFactory) {
+			CircuitBreakerFactory circuitBreakerFactory) {
 			return new FeignCircuitBreakerTargeter(circuitBreakerFactory);
 		}
 
@@ -175,7 +176,7 @@ public class FeignAutoConfiguration {
 	protected static class HttpClientFeignConfiguration {
 
 		private final Timer connectionManagerTimer = new Timer(
-				"FeignApacheHttpClientConfiguration.connectionManagerTimer", true);
+			"FeignApacheHttpClientConfiguration.connectionManagerTimer", true);
 
 		@Autowired(required = false)
 		private RegistryBuilder registryBuilder;
@@ -185,15 +186,15 @@ public class FeignAutoConfiguration {
 		@Bean
 		@ConditionalOnMissingBean(HttpClientConnectionManager.class)
 		public HttpClientConnectionManager connectionManager(
-				ApacheHttpClientConnectionManagerFactory connectionManagerFactory,
-				FeignHttpClientProperties httpClientProperties) {
+			ApacheHttpClientConnectionManagerFactory connectionManagerFactory,
+			FeignHttpClientProperties httpClientProperties) {
 			final HttpClientConnectionManager connectionManager = connectionManagerFactory
-					.newConnectionManager(httpClientProperties.isDisableSslValidation(),
-							httpClientProperties.getMaxConnections(),
-							httpClientProperties.getMaxConnectionsPerRoute(),
-							httpClientProperties.getTimeToLive(),
-							httpClientProperties.getTimeToLiveUnit(),
-							this.registryBuilder);
+				.newConnectionManager(httpClientProperties.isDisableSslValidation(),
+					httpClientProperties.getMaxConnections(),
+					httpClientProperties.getMaxConnectionsPerRoute(),
+					httpClientProperties.getTimeToLive(),
+					httpClientProperties.getTimeToLiveUnit(),
+					this.registryBuilder);
 			this.connectionManagerTimer.schedule(new TimerTask() {
 				@Override
 				public void run() {
@@ -205,15 +206,15 @@ public class FeignAutoConfiguration {
 
 		@Bean
 		public CloseableHttpClient httpClient(ApacheHttpClientFactory httpClientFactory,
-				HttpClientConnectionManager httpClientConnectionManager,
-				FeignHttpClientProperties httpClientProperties) {
+		                                      HttpClientConnectionManager httpClientConnectionManager,
+		                                      FeignHttpClientProperties httpClientProperties) {
 			RequestConfig defaultRequestConfig = RequestConfig.custom()
-					.setConnectTimeout(httpClientProperties.getConnectionTimeout())
-					.setRedirectsEnabled(httpClientProperties.isFollowRedirects())
-					.build();
+				.setConnectTimeout(httpClientProperties.getConnectionTimeout())
+				.setRedirectsEnabled(httpClientProperties.isFollowRedirects())
+				.build();
 			this.httpClient = httpClientFactory.createBuilder()
-					.setConnectionManager(httpClientConnectionManager)
-					.setDefaultRequestConfig(defaultRequestConfig).build();
+				.setConnectionManager(httpClientConnectionManager)
+				.setDefaultRequestConfig(defaultRequestConfig).build();
 			return this.httpClient;
 		}
 
@@ -229,8 +230,7 @@ public class FeignAutoConfiguration {
 			if (this.httpClient != null) {
 				try {
 					this.httpClient.close();
-				}
-				catch (IOException e) {
+				} catch (IOException e) {
 					if (LOG.isErrorEnabled()) {
 						LOG.error("Could not correctly close httpClient.");
 					}
@@ -252,8 +252,8 @@ public class FeignAutoConfiguration {
 		@Bean
 		@ConditionalOnMissingBean(ConnectionPool.class)
 		public ConnectionPool httpClientConnectionPool(
-				FeignHttpClientProperties httpClientProperties,
-				OkHttpClientConnectionPoolFactory connectionPoolFactory) {
+			FeignHttpClientProperties httpClientProperties,
+			OkHttpClientConnectionPoolFactory connectionPoolFactory) {
 			Integer maxTotalConnections = httpClientProperties.getMaxConnections();
 			Long timeToLive = httpClientProperties.getTimeToLive();
 			TimeUnit ttlUnit = httpClientProperties.getTimeToLiveUnit();
@@ -262,15 +262,15 @@ public class FeignAutoConfiguration {
 
 		@Bean
 		public okhttp3.OkHttpClient client(OkHttpClientFactory httpClientFactory,
-				ConnectionPool connectionPool,
-				FeignHttpClientProperties httpClientProperties) {
+		                                   ConnectionPool connectionPool,
+		                                   FeignHttpClientProperties httpClientProperties) {
 			Boolean followRedirects = httpClientProperties.isFollowRedirects();
 			Integer connectTimeout = httpClientProperties.getConnectionTimeout();
 			Boolean disableSslValidation = httpClientProperties.isDisableSslValidation();
 			this.okHttpClient = httpClientFactory.createBuilder(disableSslValidation)
-					.connectTimeout(connectTimeout, TimeUnit.MILLISECONDS)
-					.followRedirects(followRedirects).connectionPool(connectionPool)
-					.build();
+				.connectTimeout(connectTimeout, TimeUnit.MILLISECONDS)
+				.followRedirects(followRedirects).connectionPool(connectionPool)
+				.build();
 			return this.okHttpClient;
 		}
 
@@ -301,7 +301,7 @@ public class FeignAutoConfiguration {
 		@Bean
 		@ConditionalOnMissingBean(Client.class)
 		public Client feignClient(
-				org.apache.hc.client5.http.impl.classic.CloseableHttpClient httpClient5) {
+			org.apache.hc.client5.http.impl.classic.CloseableHttpClient httpClient5) {
 			return new ApacheHttp5Client(httpClient5);
 		}
 

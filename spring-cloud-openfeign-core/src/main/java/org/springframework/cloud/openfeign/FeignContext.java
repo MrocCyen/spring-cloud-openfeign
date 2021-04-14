@@ -37,16 +37,21 @@ public class FeignContext extends NamedContextFactory<FeignClientSpecification> 
 		super(FeignClientsConfiguration.class, "feign", "feign.client.name");
 	}
 
+	/**
+	 * 在name容器中获取type类型的bean
+	 */
 	@Nullable
 	public <T> T getInstanceWithoutAncestors(String name, Class<T> type) {
 		try {
 			return BeanFactoryUtils.beanOfType(getContext(name), type);
-		}
-		catch (BeansException ex) {
+		} catch (BeansException ex) {
 			return null;
 		}
 	}
 
+	/**
+	 * 在name容器中获取type类型的bean的map
+	 */
 	@Nullable
 	public <T> Map<String, T> getInstancesWithoutAncestors(String name, Class<T> type) {
 		return getContext(name).getBeansOfType(type);
