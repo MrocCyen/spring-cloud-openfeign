@@ -37,17 +37,30 @@ class FeignCircuitBreakerInvocationHandler implements InvocationHandler {
 
 	private final CircuitBreakerFactory factory;
 
+	/**
+	 * feign Target对应一个feign客户端
+	 */
 	private final Target<?> target;
 
+	/**
+	 * feign 客户端中，每个方法对应一个InvocationHandlerFactory.MethodHandler
+	 */
 	private final Map<Method, InvocationHandlerFactory.MethodHandler> dispatch;
 
+	/**
+	 * 回退工厂
+	 */
 	private final FallbackFactory<?> nullableFallbackFactory;
 
+	/**
+	 * 回退方法映射，key和value都是feign 客户端中的每个方法
+	 */
 	private final Map<Method, Method> fallbackMethodMap;
 
-	FeignCircuitBreakerInvocationHandler(CircuitBreakerFactory factory, Target<?> target,
-			Map<Method, InvocationHandlerFactory.MethodHandler> dispatch,
-			FallbackFactory<?> nullableFallbackFactory) {
+	FeignCircuitBreakerInvocationHandler(CircuitBreakerFactory factory,
+	                                     Target<?> target,
+	                                     Map<Method, InvocationHandlerFactory.MethodHandler> dispatch,
+	                                     FallbackFactory<?> nullableFallbackFactory) {
 		this.factory = factory;
 		this.target = checkNotNull(target, "target");
 		this.dispatch = checkNotNull(dispatch, "dispatch");
@@ -56,24 +69,20 @@ class FeignCircuitBreakerInvocationHandler implements InvocationHandler {
 	}
 
 	@Override
-	public Object invoke(final Object proxy, final Method method, final Object[] args)
-			throws Throwable {
+	public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
 		// early exit if the invoked method is from java.lang.Object
 		// code is the same as ReflectiveFeign.FeignInvocationHandler
 		if ("equals".equals(method.getName())) {
 			try {
 				Object otherHandler = args.length > 0 && args[0] != null
-						? Proxy.getInvocationHandler(args[0]) : null;
+					? Proxy.getInvocationHandler(args[0]) : null;
 				return equals(otherHandler);
-			}
-			catch (IllegalArgumentException e) {
+			} catch (IllegalArgumentException e) {
 				return false;
 			}
-		}
-		else if ("hashCode".equals(method.getName())) {
+		} else if ("hashCode".equals(method.getName())) {
 			return hashCode();
-		}
-		else if ("toString".equals(method.getName())) {
+		} else if ("toString".equals(method.getName())) {
 			return toString();
 		}
 		String circuitName = Feign.configKey(target.type(), method);
@@ -84,8 +93,7 @@ class FeignCircuitBreakerInvocationHandler implements InvocationHandler {
 				Object fallback = this.nullableFallbackFactory.create(throwable);
 				try {
 					return this.fallbackMethodMap.get(method).invoke(fallback, args);
-				}
-				catch (Exception e) {
+				} catch (Exception e) {
 					throw new IllegalStateException(e);
 				}
 			};
@@ -98,11 +106,9 @@ class FeignCircuitBreakerInvocationHandler implements InvocationHandler {
 		return () -> {
 			try {
 				return this.dispatch.get(method).invoke(args);
-			}
-			catch (RuntimeException throwable) {
+			} catch (RuntimeException throwable) {
 				throw throwable;
-			}
-			catch (Throwable throwable) {
+			} catch (Throwable throwable) {
 				throw new RuntimeException(throwable);
 			}
 		};
@@ -115,11 +121,11 @@ class FeignCircuitBreakerInvocationHandler implements InvocationHandler {
 	 * doesn't take effect to the method in InvocationHandler.invoke. Use map to store a
 	 * copy of method to invoke the fallback to bypass this and reducing the count of
 	 * reflection calls.
+	 *
 	 * @return cached methods map for fallback invoking
 	 */
-	static Map<Method, Method> toFallbackMethod(
-			Map<Method, InvocationHandlerFactory.MethodHandler> dispatch) {
-		Map<Method, Method> result = new LinkedHashMap<Method, Method>();
+	static Map<Method, Method> toFallbackMethod(Map<Method, InvocationHandlerFactory.MethodHandler> dispatch) {
+		Map<Method, Method> result = new LinkedHashMap<>();
 		for (Method method : dispatch.keySet()) {
 			method.setAccessible(true);
 			result.put(method, method);

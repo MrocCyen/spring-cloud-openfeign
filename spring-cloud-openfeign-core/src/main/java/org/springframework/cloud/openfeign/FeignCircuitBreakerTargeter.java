@@ -100,8 +100,7 @@ class FeignCircuitBreakerTargeter implements Targeter {
 
 	private FeignCircuitBreaker.Builder builder(String feignClientName,
 	                                            FeignCircuitBreaker.Builder builder) {
-		return builder.circuitBreakerFactory(this.circuitBreakerFactory)
-			.feignClientName(feignClientName);
+		return builder.circuitBreakerFactory(this.circuitBreakerFactory).feignClientName(feignClientName);
 	}
 
 }

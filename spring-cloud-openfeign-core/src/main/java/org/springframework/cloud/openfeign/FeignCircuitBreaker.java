@@ -46,8 +46,14 @@ public final class FeignCircuitBreaker {
 	 */
 	public static final class Builder extends Feign.Builder {
 
+		/**
+		 * 断路器工厂
+		 */
 		private CircuitBreakerFactory circuitBreakerFactory;
 
+		/**
+		 * feign客户端名称
+		 */
 		private String feignClientName;
 
 		Builder circuitBreakerFactory(CircuitBreakerFactory circuitBreakerFactory) {
@@ -61,26 +67,27 @@ public final class FeignCircuitBreaker {
 		}
 
 		public <T> T target(Target<T> target, T fallback) {
-			return build(
-				fallback != null ? new FallbackFactory.Default<T>(fallback) : null)
+			return build(fallback != null ? new FallbackFactory.Default<>(fallback) : null)
 				.newInstance(target);
 		}
 
-		public <T> T target(Target<T> target,
-		                    FallbackFactory<? extends T> fallbackFactory) {
-			return build(fallbackFactory).newInstance(target);
+		public <T> T target(Target<T> target, FallbackFactory<? extends T> fallbackFactory) {
+			return build(fallbackFactory)
+				.newInstance(target);
 		}
 
 		@Override
 		public <T> T target(Target<T> target) {
-			return build(null).newInstance(target);
+			return build(null)
+				.newInstance(target);
 		}
 
+		//设置invocationHandlerFactory
+		//生产的invocationHandler为FeignCircuitBreakerInvocationHandler
 		public Feign build(final FallbackFactory<?> nullableFallbackFactory) {
-			super.invocationHandlerFactory(
-				(target, dispatch) -> new FeignCircuitBreakerInvocationHandler(
-					circuitBreakerFactory, target, dispatch,
-					nullableFallbackFactory));
+			super.invocationHandlerFactory((target, dispatch)
+				-> new FeignCircuitBreakerInvocationHandler(circuitBreakerFactory, target, dispatch, nullableFallbackFactory));
+
 			return super.build();
 		}
 
