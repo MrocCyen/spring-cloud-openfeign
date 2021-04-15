@@ -121,6 +121,14 @@ public class FeignAutoConfiguration {
 
 	}
 
+	/**
+	 * 同时满足条件：
+	 * feign.circuitbreaker.enabled=false
+	 * feign.hystrix.enabled=false
+	 * <p>
+	 * feign.circuitbreaker.enabled默认是true
+	 * feign.hystrix.enabled默认是false
+	 */
 	@Configuration(proxyBeanMethods = false)
 	@Conditional(DefaultFeignTargeterConditions.class)
 	protected static class DefaultFeignTargeterConfiguration {
@@ -133,11 +141,18 @@ public class FeignAutoConfiguration {
 
 	}
 
+	/**
+	 * 同时满足条件：
+	 * feign.circuitbreaker.enabled=false
+	 * feign.hystrix.enabled=true
+	 * <p>
+	 * feign.circuitbreaker.enabled默认是true
+	 * feign.hystrix.enabled默认是false
+	 */
 	@Configuration(proxyBeanMethods = false)
 	@Conditional(FeignCircuitBreakerDisabledConditions.class)
 	@ConditionalOnClass(name = "feign.hystrix.HystrixFeign")
-	@ConditionalOnProperty(value = "feign.hystrix.enabled", havingValue = "true",
-		matchIfMissing = true)
+	@ConditionalOnProperty(value = "feign.hystrix.enabled", havingValue = "true", matchIfMissing = true)
 	protected static class HystrixFeignTargeterConfiguration {
 
 		@Bean
@@ -148,6 +163,14 @@ public class FeignAutoConfiguration {
 
 	}
 
+	/**
+	 * 同时满足条件：
+	 * feign.circuitbreaker.enabled=true
+	 * 容器中有CircuitBreakerFactory这个bean
+	 * <p>
+	 * feign.circuitbreaker.enabled默认是true
+	 * feign.hystrix.enabled默认是false
+	 */
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(CircuitBreaker.class)
 	@ConditionalOnProperty(value = "feign.circuitbreaker.enabled", havingValue = "true")
@@ -156,8 +179,7 @@ public class FeignAutoConfiguration {
 		@Bean
 		@ConditionalOnMissingBean
 		@ConditionalOnBean(CircuitBreakerFactory.class)
-		public Targeter circuitBreakerFeignTargeter(
-			CircuitBreakerFactory circuitBreakerFactory) {
+		public Targeter circuitBreakerFeignTargeter(CircuitBreakerFactory circuitBreakerFactory) {
 			return new FeignCircuitBreakerTargeter(circuitBreakerFactory);
 		}
 
@@ -185,9 +207,8 @@ public class FeignAutoConfiguration {
 
 		@Bean
 		@ConditionalOnMissingBean(HttpClientConnectionManager.class)
-		public HttpClientConnectionManager connectionManager(
-			ApacheHttpClientConnectionManagerFactory connectionManagerFactory,
-			FeignHttpClientProperties httpClientProperties) {
+		public HttpClientConnectionManager connectionManager(ApacheHttpClientConnectionManagerFactory connectionManagerFactory,
+		                                                     FeignHttpClientProperties httpClientProperties) {
 			final HttpClientConnectionManager connectionManager = connectionManagerFactory
 				.newConnectionManager(httpClientProperties.isDisableSslValidation(),
 					httpClientProperties.getMaxConnections(),
@@ -251,9 +272,8 @@ public class FeignAutoConfiguration {
 
 		@Bean
 		@ConditionalOnMissingBean(ConnectionPool.class)
-		public ConnectionPool httpClientConnectionPool(
-			FeignHttpClientProperties httpClientProperties,
-			OkHttpClientConnectionPoolFactory connectionPoolFactory) {
+		public ConnectionPool httpClientConnectionPool(FeignHttpClientProperties httpClientProperties,
+		                                               OkHttpClientConnectionPoolFactory connectionPoolFactory) {
 			Integer maxTotalConnections = httpClientProperties.getMaxConnections();
 			Long timeToLive = httpClientProperties.getTimeToLive();
 			TimeUnit ttlUnit = httpClientProperties.getTimeToLiveUnit();

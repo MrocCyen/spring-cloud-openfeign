@@ -357,7 +357,7 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 
 	protected <T> T getInheritedAwareOptional(FeignContext context, Class<T> type) {
 		if (inheritParentContext) {
-			//先从父级容器中获取，然后从当前容器获取
+			//先从当前容器获取，然后从父级容器中获取
 			return getOptional(context, type);
 		} else {
 			//直接从容器中获取
@@ -368,7 +368,7 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 	protected <T> Map<String, T> getInheritedAwareInstances(FeignContext context,
 	                                                        Class<T> type) {
 		if (inheritParentContext) {
-			//先从父级容器中获取，然后从当前容器获取
+			//先从当前容器获取，然后从父级容器中获取
 			return context.getInstances(contextId, type);
 		} else {
 			//直接从容器中获取
@@ -376,12 +376,19 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 		}
 	}
 
-	protected <T> T loadBalance(Feign.Builder builder, FeignContext context,
+	protected <T> T loadBalance(Feign.Builder builder,
+	                            FeignContext context,
 	                            HardCodedTarget<T> target) {
+		//从当前服务的子上下文中获取Client bean
+		////先从当前容器获取，然后从父级容器中获取
 		Client client = getOptional(context, Client.class);
 		if (client != null) {
+			//设置client
 			builder.client(client);
+			//从当前服务的子上下文中获取Targeter bean
+			////先从当前容器获取，然后从父级容器中获取
 			Targeter targeter = get(context, Targeter.class);
+
 			return targeter.target(this, builder, context, target);
 		}
 
@@ -417,10 +424,14 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 			url += cleanPath();
 			return (T) loadBalance(builder, context, new HardCodedTarget<>(type, name, url));
 		}
+
 		if (StringUtils.hasText(url) && !url.startsWith("http")) {
 			url = "http://" + url;
 		}
 		String url = this.url + cleanPath();
+
+		//从当前服务的子上下文中获取Client bean
+		////先从当前容器获取，然后从父级容器中获取
 		Client client = getOptional(context, Client.class);
 		if (client != null) {
 			if (client instanceof LoadBalancerFeignClient) {
@@ -436,12 +447,17 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 			if (client instanceof RetryableFeignBlockingLoadBalancerClient) {
 				// not load balancing because we have a url,
 				// but Spring Cloud LoadBalancer is on the classpath, so unwrap
-				client = ((RetryableFeignBlockingLoadBalancerClient) client)
-					.getDelegate();
+				client = ((RetryableFeignBlockingLoadBalancerClient) client).getDelegate();
 			}
+
+			//设置client
 			builder.client(client);
 		}
+
+		//从当前服务的子上下文中获取Targeter bean
+		////先从当前容器获取，然后从父级容器中获取
 		Targeter targeter = get(context, Targeter.class);
+
 		return (T) targeter.target(this, builder, context, new HardCodedTarget<>(type, name, url));
 	}
 
