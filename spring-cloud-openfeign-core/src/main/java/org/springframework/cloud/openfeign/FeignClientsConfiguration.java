@@ -194,6 +194,12 @@ public class FeignClientsConfiguration {
 	@ConditionalOnClass({HystrixCommand.class, HystrixFeign.class})
 	protected static class HystrixFeignConfiguration {
 
+		/**
+		 * 同时满足条件：
+		 * feign.hystrix.enabled=true
+		 * classpath有HystrixCommand这个类
+		 * classpath有HystrixHystrixFeign这个类
+		 */
 		@Bean
 		@Scope("prototype")
 		@ConditionalOnMissingBean
@@ -228,6 +234,11 @@ public class FeignClientsConfiguration {
 			return Feign.builder().retryer(retryer);
 		}
 
+		/**
+		 * 同时满足条件：
+		 * feign.circuitbreaker.enabled=true
+		 * classpath有CircuitBreaker这个类
+		 */
 		@Bean
 		@Scope("prototype")
 		@ConditionalOnMissingBean

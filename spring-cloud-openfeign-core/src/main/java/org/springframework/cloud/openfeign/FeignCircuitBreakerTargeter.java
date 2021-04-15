@@ -36,6 +36,7 @@ class FeignCircuitBreakerTargeter implements Targeter {
 	                    Feign.Builder feign,
 	                    FeignContext context,
 	                    Target.HardCodedTarget<T> target) {
+		//不是eignCircuitBreaker.Builder，直接执行
 		if (!(feign instanceof FeignCircuitBreaker.Builder)) {
 			return feign.target(target);
 		}

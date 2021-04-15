@@ -145,6 +145,7 @@ public class FeignAutoConfiguration {
 	 * 同时满足条件：
 	 * feign.circuitbreaker.enabled=false
 	 * feign.hystrix.enabled=true
+	 * classpath有HystrixFeign这个类
 	 * <p>
 	 * feign.circuitbreaker.enabled默认是true
 	 * feign.hystrix.enabled默认是false
@@ -166,6 +167,7 @@ public class FeignAutoConfiguration {
 	/**
 	 * 同时满足条件：
 	 * feign.circuitbreaker.enabled=true
+	 * classpath有CircuitBreaker这个类
 	 * 容器中有CircuitBreakerFactory这个bean
 	 * <p>
 	 * feign.circuitbreaker.enabled默认是true

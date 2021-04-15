@@ -62,12 +62,12 @@ public final class FeignCircuitBreaker {
 
 		public <T> T target(Target<T> target, T fallback) {
 			return build(
-					fallback != null ? new FallbackFactory.Default<T>(fallback) : null)
-							.newInstance(target);
+				fallback != null ? new FallbackFactory.Default<T>(fallback) : null)
+				.newInstance(target);
 		}
 
 		public <T> T target(Target<T> target,
-				FallbackFactory<? extends T> fallbackFactory) {
+		                    FallbackFactory<? extends T> fallbackFactory) {
 			return build(fallbackFactory).newInstance(target);
 		}
 
@@ -78,9 +78,9 @@ public final class FeignCircuitBreaker {
 
 		public Feign build(final FallbackFactory<?> nullableFallbackFactory) {
 			super.invocationHandlerFactory(
-					(target, dispatch) -> new FeignCircuitBreakerInvocationHandler(
-							circuitBreakerFactory, target, dispatch,
-							nullableFallbackFactory));
+				(target, dispatch) -> new FeignCircuitBreakerInvocationHandler(
+					circuitBreakerFactory, target, dispatch,
+					nullableFallbackFactory));
 			return super.build();
 		}
 
