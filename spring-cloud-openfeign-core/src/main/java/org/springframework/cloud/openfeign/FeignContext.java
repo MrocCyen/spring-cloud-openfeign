@@ -34,11 +34,27 @@ import org.springframework.lang.Nullable;
 public class FeignContext extends NamedContextFactory<FeignClientSpecification> {
 
 	public FeignContext() {
+		/**
+		 * 这里的FeignClientsConfiguration中配置的bean，将会被实例化到每个feign客户端所在的子上下文中
+		 * 每个上下文都包含以下几个bean：
+		 * Decoder
+		 * Encoder
+		 * QueryMapEncoder
+		 * Contract
+		 * FormattingConversionService
+		 * Retryer
+		 * Feign.Builder feignBuilder  - @Scope("prototype")
+		 * FeignLoggerFactory
+		 * FeignClientConfigurer
+		 * Feign.Builder feignHystrixBuilder  - @Scope("prototype")
+		 * Feign.Builder defaultFeignBuilder  - @Scope("prototype")
+		 * Feign.Builder circuitBreakerFeignBuilder  - @Scope("prototype")
+		 */
 		super(FeignClientsConfiguration.class, "feign", "feign.client.name");
 	}
 
 	/**
-	 * 在name容器中获取type类型的bean
+	 * 在name容器中获取type类型的bean，不会从父级获取
 	 */
 	@Nullable
 	public <T> T getInstanceWithoutAncestors(String name, Class<T> type) {

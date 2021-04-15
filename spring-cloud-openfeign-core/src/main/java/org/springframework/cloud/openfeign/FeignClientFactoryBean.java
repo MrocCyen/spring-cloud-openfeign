@@ -71,8 +71,14 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 	 * lifecycle race condition.
 	 ***********************************/
 
+	/**
+	 * 注解FeignClient所在的类类型
+	 */
 	private Class<?> type;
 
+	/**
+	 * 这里是服务名
+	 */
 	private String name;
 
 	private String url;
@@ -105,11 +111,16 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 		Assert.hasText(name, "Name must be set");
 	}
 
+	/**
+	 * 根据配置构建Feign.Builder
+	 */
 	protected Feign.Builder feign(FeignContext context) {
+		//从当前子上下文中获取FeignLoggerFactory工厂
 		FeignLoggerFactory loggerFactory = get(context, FeignLoggerFactory.class);
 		Logger logger = loggerFactory.create(type);
 
 		// @formatter:off
+		//Feign.Builder是原型作用域
 		Feign.Builder builder = get(context, Feign.Builder.class)
 			// required values
 			.logger(logger)
@@ -118,108 +129,135 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 			.contract(get(context, Contract.class));
 		// @formatter:on
 
+		//配置feign
 		configureFeign(context, builder);
+		//允许用户自定义处理Feign builder
 		applyBuildCustomizers(context, builder);
 
 		return builder;
 	}
 
-	private void applyBuildCustomizers(FeignContext context, Feign.Builder builder) {
-		Map<String, FeignBuilderCustomizer> customizerMap = context
-			.getInstances(contextId, FeignBuilderCustomizer.class);
+	//允许用户自定义处理Feign builder
+	private void applyBuildCustomizers(FeignContext context,
+	                                   Feign.Builder builder) {
+		Map<String, FeignBuilderCustomizer> customizerMap = context.getInstances(contextId, FeignBuilderCustomizer.class);
 
 		if (customizerMap != null) {
 			customizerMap.values().stream()
 				.sorted(AnnotationAwareOrderComparator.INSTANCE)
-				.forEach(feignBuilderCustomizer -> feignBuilderCustomizer
-					.customize(builder));
+				.forEach(feignBuilderCustomizer -> feignBuilderCustomizer.customize(builder));
 		}
 	}
 
+	/**
+	 * 配置feign
+	 */
 	protected void configureFeign(FeignContext context, Feign.Builder builder) {
+		//当前上下文中的配置信息
 		FeignClientProperties properties = beanFactory != null
 			? beanFactory.getBean(FeignClientProperties.class)
 			: applicationContext.getBean(FeignClientProperties.class);
-
-		FeignClientConfigurer feignClientConfigurer = getOptional(context,
-			FeignClientConfigurer.class);
+		//从当前子上下文中获取FeignClientConfigurer bean
+		FeignClientConfigurer feignClientConfigurer = getOptional(context, FeignClientConfigurer.class);
+		//设置是否可以继承父级上下文的配置
 		setInheritParentContext(feignClientConfigurer.inheritParentConfiguration());
 
-		if (properties != null && inheritParentContext) {
+		//可以继承父级容器的配置
+		if (inheritParentContext) {
+			//如果是使用默认配置
 			if (properties.isDefaultToProperties()) {
+				//先设置，这里可能会从父级容器中获取到配置，这里的配置是通过配置类来获取的
 				configureUsingConfiguration(context, builder);
-				configureUsingProperties(
-					properties.getConfig().get(properties.getDefaultConfig()),
-					builder);
+				//再使用默认的Properties配置进行覆盖
+				configureUsingProperties(properties.getConfig().get(properties.getDefaultConfig()), builder);
+				//再使用本地Properties配置进行覆盖
 				configureUsingProperties(properties.getConfig().get(contextId), builder);
 			} else {
-				configureUsingProperties(
-					properties.getConfig().get(properties.getDefaultConfig()),
-					builder);
+				//使用默认的Properties配置进行覆盖
+				configureUsingProperties(properties.getConfig().get(properties.getDefaultConfig()), builder);
+				//再使用本地Properties配置进行覆盖
 				configureUsingProperties(properties.getConfig().get(contextId), builder);
+				//这里可能会从父级容器中获取到配置，这里的配置是通过配置类来获取的
 				configureUsingConfiguration(context, builder);
 			}
-		} else {
+		} else {//不可以继承父级容器的配置，这里的配置是通过配置类来获取的，不能通过属性来获取
 			configureUsingConfiguration(context, builder);
 		}
 	}
 
+	/**
+	 * 配置正在使用的配置信息
+	 * <p>
+	 * 这里配置的信息有（如果有值的情况下会设置）：
+	 * Logger.Level
+	 * Retryer
+	 * ErrorDecoder
+	 * FeignErrorDecoderFactory
+	 * Request.Options
+	 * RequestInterceptor
+	 * QueryMapEncoder
+	 * ExceptionPropagationPolicy
+	 */
 	protected void configureUsingConfiguration(FeignContext context,
 	                                           Feign.Builder builder) {
+		//如果设置了可以从父级获取，则先从父级容器中获取，不存在的话然后在从当前容器中获取
 		Logger.Level level = getInheritedAwareOptional(context, Logger.Level.class);
 		if (level != null) {
 			builder.logLevel(level);
 		}
+		//如果设置了可以从父级获取，则先从父级容器中获取，不存在的话然后在从当前容器中获取
 		Retryer retryer = getInheritedAwareOptional(context, Retryer.class);
 		if (retryer != null) {
 			builder.retryer(retryer);
 		}
-		ErrorDecoder errorDecoder = getInheritedAwareOptional(context,
-			ErrorDecoder.class);
+		//如果设置了可以从父级获取，则先从父级容器中获取，不存在的话然后在从当前容器中获取
+		ErrorDecoder errorDecoder = getInheritedAwareOptional(context, ErrorDecoder.class);
 		if (errorDecoder != null) {
 			builder.errorDecoder(errorDecoder);
 		} else {
-			FeignErrorDecoderFactory errorDecoderFactory = getOptional(context,
-				FeignErrorDecoderFactory.class);
+			//先从父级容器中获取，不存在的话然后在从当前容器中获取
+			FeignErrorDecoderFactory errorDecoderFactory = getOptional(context, FeignErrorDecoderFactory.class);
 			if (errorDecoderFactory != null) {
 				ErrorDecoder factoryErrorDecoder = errorDecoderFactory.create(type);
 				builder.errorDecoder(factoryErrorDecoder);
 			}
 		}
-		Request.Options options = getInheritedAwareOptional(context,
-			Request.Options.class);
+		//如果设置了可以从父级获取，则先从父级容器中获取，不存在的话然后在从当前容器中获取
+		Request.Options options = getInheritedAwareOptional(context, Request.Options.class);
 		if (options != null) {
 			builder.options(options);
 			readTimeoutMillis = options.readTimeoutMillis();
 			connectTimeoutMillis = options.connectTimeoutMillis();
 			followRedirects = options.isFollowRedirects();
 		}
-		Map<String, RequestInterceptor> requestInterceptors = getInheritedAwareInstances(
-			context, RequestInterceptor.class);
+		//如果设置了可以从父级获取，则先从父级容器中获取，不存在的话然后在从当前容器中获取
+		Map<String, RequestInterceptor> requestInterceptors = getInheritedAwareInstances(context, RequestInterceptor.class);
 		if (requestInterceptors != null) {
-			List<RequestInterceptor> interceptors = new ArrayList<>(
-				requestInterceptors.values());
+			List<RequestInterceptor> interceptors = new ArrayList<>(requestInterceptors.values());
 			AnnotationAwareOrderComparator.sort(interceptors);
 			builder.requestInterceptors(interceptors);
 		}
-		QueryMapEncoder queryMapEncoder = getInheritedAwareOptional(context,
-			QueryMapEncoder.class);
+		//如果设置了可以从父级获取，则先从父级容器中获取，不存在的话然后在从当前容器中获取
+		QueryMapEncoder queryMapEncoder = getInheritedAwareOptional(context, QueryMapEncoder.class);
 		if (queryMapEncoder != null) {
 			builder.queryMapEncoder(queryMapEncoder);
 		}
 		if (decode404) {
 			builder.decode404();
 		}
-		ExceptionPropagationPolicy exceptionPropagationPolicy = getInheritedAwareOptional(
-			context, ExceptionPropagationPolicy.class);
+		//如果设置了可以从父级获取，则先从父级容器中获取，不存在的话然后在从当前容器中获取
+		ExceptionPropagationPolicy exceptionPropagationPolicy = getInheritedAwareOptional(context, ExceptionPropagationPolicy.class);
 		if (exceptionPropagationPolicy != null) {
 			builder.exceptionPropagationPolicy(exceptionPropagationPolicy);
 		}
 	}
 
-	protected void configureUsingProperties(
-		FeignClientProperties.FeignClientConfiguration config,
-		Feign.Builder builder) {
+	/**
+	 * 配置属性
+	 */
+	protected void configureUsingProperties(FeignClientProperties.FeignClientConfiguration config,
+	                                        Feign.Builder builder) {
+		//没有设置，直接返回
 		if (config == null) {
 			return;
 		}
@@ -229,10 +267,13 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 		}
 
 		connectTimeoutMillis = config.getConnectTimeout() != null
-			? config.getConnectTimeout() : connectTimeoutMillis;
-		readTimeoutMillis = config.getReadTimeout() != null ? config.getReadTimeout()
+			? config.getConnectTimeout()
+			: connectTimeoutMillis;
+		readTimeoutMillis = config.getReadTimeout() != null
+			? config.getReadTimeout()
 			: readTimeoutMillis;
-		followRedirects = config.isFollowRedirects() != null ? config.isFollowRedirects()
+		followRedirects = config.isFollowRedirects() != null
+			? config.isFollowRedirects()
 			: followRedirects;
 
 		builder.options(new Request.Options(connectTimeoutMillis, TimeUnit.MILLISECONDS,
@@ -292,9 +333,11 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 
 	private <T> T getOrInstantiate(Class<T> tClass) {
 		try {
-			return beanFactory != null ? beanFactory.getBean(tClass)
+			return beanFactory != null
+				? beanFactory.getBean(tClass)
 				: applicationContext.getBean(tClass);
 		} catch (NoSuchBeanDefinitionException e) {
+			//获取不了，直接创建
 			return BeanUtils.instantiateClass(tClass);
 		}
 	}
@@ -314,8 +357,10 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 
 	protected <T> T getInheritedAwareOptional(FeignContext context, Class<T> type) {
 		if (inheritParentContext) {
+			//先从父级容器中获取，然后从当前容器获取
 			return getOptional(context, type);
 		} else {
+			//直接从容器中获取
 			return context.getInstanceWithoutAncestors(contextId, type);
 		}
 	}
@@ -323,8 +368,10 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 	protected <T> Map<String, T> getInheritedAwareInstances(FeignContext context,
 	                                                        Class<T> type) {
 		if (inheritParentContext) {
+			//先从父级容器中获取，然后从当前容器获取
 			return context.getInstances(contextId, type);
 		} else {
+			//直接从容器中获取
 			return context.getInstancesWithoutAncestors(contextId, type);
 		}
 	}
@@ -353,9 +400,12 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 	 * information
 	 */
 	<T> T getTarget() {
+		//feign上下文
 		FeignContext context = beanFactory != null
 			? beanFactory.getBean(FeignContext.class)
 			: applicationContext.getBean(FeignContext.class);
+
+		//todo 获取feign的构建器，这个是原型作用域
 		Feign.Builder builder = feign(context);
 
 		if (!StringUtils.hasText(url)) {
@@ -365,8 +415,7 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 				url = name;
 			}
 			url += cleanPath();
-			return (T) loadBalance(builder, context,
-				new HardCodedTarget<>(type, name, url));
+			return (T) loadBalance(builder, context, new HardCodedTarget<>(type, name, url));
 		}
 		if (StringUtils.hasText(url) && !url.startsWith("http")) {
 			url = "http://" + url;
@@ -393,8 +442,7 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 			builder.client(client);
 		}
 		Targeter targeter = get(context, Targeter.class);
-		return (T) targeter.target(this, builder, context,
-			new HardCodedTarget<>(type, name, url));
+		return (T) targeter.target(this, builder, context, new HardCodedTarget<>(type, name, url));
 	}
 
 	private String cleanPath() {

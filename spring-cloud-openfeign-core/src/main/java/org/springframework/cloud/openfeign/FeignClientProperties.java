@@ -42,15 +42,27 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties("feign.client")
 public class FeignClientProperties {
 
+	/**
+	 * 标识是否使用默认配置
+	 */
 	private boolean defaultToProperties = true;
 
+	/**
+	 * 默认配置标识
+	 */
 	private String defaultConfig = "default";
 
+	/**
+	 * 具体的每个服务的配置
+	 */
 	private Map<String, FeignClientConfiguration> config = new HashMap<>();
 
 	/**
 	 * Feign clients do not encode slash `/` characters by default. To change this
 	 * behavior, set the `decodeSlash` to `false`.
+	 */
+	/**
+	 * 表示是否要对斜线“/”进行编码
 	 */
 	private boolean decodeSlash = true;
 
@@ -96,9 +108,9 @@ public class FeignClientProperties {
 		}
 		FeignClientProperties that = (FeignClientProperties) o;
 		return defaultToProperties == that.defaultToProperties
-				&& Objects.equals(defaultConfig, that.defaultConfig)
-				&& Objects.equals(config, that.config)
-				&& Objects.equals(decodeSlash, that.decodeSlash);
+			&& Objects.equals(defaultConfig, that.defaultConfig)
+			&& Objects.equals(config, that.config)
+			&& Objects.equals(decodeSlash, that.decodeSlash);
 	}
 
 	@Override
@@ -111,32 +123,74 @@ public class FeignClientProperties {
 	 */
 	public static class FeignClientConfiguration {
 
+		/**
+		 * 日志等级
+		 */
 		private Logger.Level loggerLevel;
 
+		/**
+		 * 连接超时时间
+		 */
 		private Integer connectTimeout;
 
+		/**
+		 * 读数据超时时间
+		 */
 		private Integer readTimeout;
 
+		/**
+		 * 重试类类型
+		 */
 		private Class<Retryer> retryer;
 
+		/**
+		 * 错误解码类类型
+		 */
 		private Class<ErrorDecoder> errorDecoder;
 
+		/**
+		 * 请求拦截器类类型
+		 */
 		private List<Class<RequestInterceptor>> requestInterceptors;
 
+		/**
+		 * 默认请求头
+		 */
 		private Map<String, Collection<String>> defaultRequestHeaders;
 
+		/**
+		 * 默认查询参数
+		 */
 		private Map<String, Collection<String>> defaultQueryParameters;
 
+		/**
+		 * 是否使用404替换异常
+		 */
 		private Boolean decode404;
 
+		/**
+		 * 解码器
+		 */
 		private Class<Decoder> decoder;
 
+		/**
+		 * 编码器
+		 */
 		private Class<Encoder> encoder;
 
+		/**
+		 * 注解处理实现类类型
+		 */
 		private Class<Contract> contract;
 
+		/**
+		 * 异常传播策略
+		 */
 		private ExceptionPropagationPolicy exceptionPropagationPolicy;
 
+		/**
+		 *
+		 */
 		private Boolean followRedirects;
 
 		public Logger.Level getLoggerLevel() {
@@ -184,7 +238,7 @@ public class FeignClientProperties {
 		}
 
 		public void setRequestInterceptors(
-				List<Class<RequestInterceptor>> requestInterceptors) {
+			List<Class<RequestInterceptor>> requestInterceptors) {
 			this.requestInterceptors = requestInterceptors;
 		}
 
@@ -193,7 +247,7 @@ public class FeignClientProperties {
 		}
 
 		public void setDefaultRequestHeaders(
-				Map<String, Collection<String>> defaultRequestHeaders) {
+			Map<String, Collection<String>> defaultRequestHeaders) {
 			this.defaultRequestHeaders = defaultRequestHeaders;
 		}
 
@@ -202,7 +256,7 @@ public class FeignClientProperties {
 		}
 
 		public void setDefaultQueryParameters(
-				Map<String, Collection<String>> defaultQueryParameters) {
+			Map<String, Collection<String>> defaultQueryParameters) {
 			this.defaultQueryParameters = defaultQueryParameters;
 		}
 
@@ -243,7 +297,7 @@ public class FeignClientProperties {
 		}
 
 		public void setExceptionPropagationPolicy(
-				ExceptionPropagationPolicy exceptionPropagationPolicy) {
+			ExceptionPropagationPolicy exceptionPropagationPolicy) {
 			this.exceptionPropagationPolicy = exceptionPropagationPolicy;
 		}
 
@@ -265,28 +319,28 @@ public class FeignClientProperties {
 			}
 			FeignClientConfiguration that = (FeignClientConfiguration) o;
 			return loggerLevel == that.loggerLevel
-					&& Objects.equals(connectTimeout, that.connectTimeout)
-					&& Objects.equals(readTimeout, that.readTimeout)
-					&& Objects.equals(retryer, that.retryer)
-					&& Objects.equals(errorDecoder, that.errorDecoder)
-					&& Objects.equals(requestInterceptors, that.requestInterceptors)
-					&& Objects.equals(decode404, that.decode404)
-					&& Objects.equals(encoder, that.encoder)
-					&& Objects.equals(decoder, that.decoder)
-					&& Objects.equals(contract, that.contract)
-					&& Objects.equals(exceptionPropagationPolicy,
-							that.exceptionPropagationPolicy)
-					&& Objects.equals(defaultRequestHeaders, that.defaultRequestHeaders)
-					&& Objects.equals(defaultQueryParameters, that.defaultQueryParameters)
-					&& Objects.equals(followRedirects, that.followRedirects);
+				&& Objects.equals(connectTimeout, that.connectTimeout)
+				&& Objects.equals(readTimeout, that.readTimeout)
+				&& Objects.equals(retryer, that.retryer)
+				&& Objects.equals(errorDecoder, that.errorDecoder)
+				&& Objects.equals(requestInterceptors, that.requestInterceptors)
+				&& Objects.equals(decode404, that.decode404)
+				&& Objects.equals(encoder, that.encoder)
+				&& Objects.equals(decoder, that.decoder)
+				&& Objects.equals(contract, that.contract)
+				&& Objects.equals(exceptionPropagationPolicy,
+				that.exceptionPropagationPolicy)
+				&& Objects.equals(defaultRequestHeaders, that.defaultRequestHeaders)
+				&& Objects.equals(defaultQueryParameters, that.defaultQueryParameters)
+				&& Objects.equals(followRedirects, that.followRedirects);
 		}
 
 		@Override
 		public int hashCode() {
 			return Objects.hash(loggerLevel, connectTimeout, readTimeout, retryer,
-					errorDecoder, requestInterceptors, decode404, encoder, decoder,
-					contract, exceptionPropagationPolicy, defaultQueryParameters,
-					defaultRequestHeaders, followRedirects);
+				errorDecoder, requestInterceptors, decode404, encoder, decoder,
+				contract, exceptionPropagationPolicy, defaultQueryParameters,
+				defaultRequestHeaders, followRedirects);
 		}
 
 	}

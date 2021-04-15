@@ -97,7 +97,7 @@ public class FeignClientsConfiguration {
 	@ConditionalOnMissingBean
 	public Decoder feignDecoder() {
 		return new OptionalDecoder(
-				new ResponseEntityDecoder(new SpringDecoder(this.messageConverters)));
+			new ResponseEntityDecoder(new SpringDecoder(this.messageConverters)));
 	}
 
 	@Bean
@@ -111,17 +111,17 @@ public class FeignClientsConfiguration {
 	@ConditionalOnClass(name = "org.springframework.data.domain.Pageable")
 	@ConditionalOnMissingBean
 	public Encoder feignEncoderPageable(
-			ObjectProvider<AbstractFormWriter> formWriterProvider) {
+		ObjectProvider<AbstractFormWriter> formWriterProvider) {
 		PageableSpringEncoder encoder = new PageableSpringEncoder(
-				springEncoder(formWriterProvider, encoderProperties));
+			springEncoder(formWriterProvider, encoderProperties));
 
 		if (springDataWebProperties != null) {
 			encoder.setPageParameter(
-					springDataWebProperties.getPageable().getPageParameter());
+				springDataWebProperties.getPageable().getPageParameter());
 			encoder.setSizeParameter(
-					springDataWebProperties.getPageable().getSizeParameter());
+				springDataWebProperties.getPageable().getSizeParameter());
 			encoder.setSortParameter(
-					springDataWebProperties.getSort().getSortParameter());
+				springDataWebProperties.getSort().getSortParameter());
 		}
 		return encoder;
 	}
@@ -137,9 +137,9 @@ public class FeignClientsConfiguration {
 	@ConditionalOnMissingBean
 	public Contract feignContract(ConversionService feignConversionService) {
 		boolean decodeSlash = feignClientProperties == null
-				|| feignClientProperties.isDecodeSlash();
+			|| feignClientProperties.isDecodeSlash();
 		return new SpringMvcContract(this.parameterProcessors, feignConversionService,
-				decodeSlash);
+			decodeSlash);
 	}
 
 	@Bean
@@ -178,21 +178,20 @@ public class FeignClientsConfiguration {
 	}
 
 	private Encoder springEncoder(ObjectProvider<AbstractFormWriter> formWriterProvider,
-			FeignEncoderProperties encoderProperties) {
+	                              FeignEncoderProperties encoderProperties) {
 		AbstractFormWriter formWriter = formWriterProvider.getIfAvailable();
 
 		if (formWriter != null) {
 			return new SpringEncoder(new SpringPojoFormEncoder(formWriter),
-					this.messageConverters, encoderProperties);
-		}
-		else {
+				this.messageConverters, encoderProperties);
+		} else {
 			return new SpringEncoder(new SpringFormEncoder(), this.messageConverters,
-					encoderProperties);
+				encoderProperties);
 		}
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnClass({ HystrixCommand.class, HystrixFeign.class })
+	@ConditionalOnClass({HystrixCommand.class, HystrixFeign.class})
 	protected static class HystrixFeignConfiguration {
 
 		@Bean
@@ -211,7 +210,7 @@ public class FeignClientsConfiguration {
 			super();
 
 			MultipartFormContentProcessor processor = (MultipartFormContentProcessor) getContentProcessor(
-					MULTIPART);
+				MULTIPART);
 			processor.addFirstWriter(formWriter);
 		}
 
@@ -224,7 +223,7 @@ public class FeignClientsConfiguration {
 
 		@Bean
 		@Scope("prototype")
-		@ConditionalOnMissingBean({ Feign.Builder.class, CircuitBreakerFactory.class })
+		@ConditionalOnMissingBean({Feign.Builder.class, CircuitBreakerFactory.class})
 		public Feign.Builder defaultFeignBuilder(Retryer retryer) {
 			return Feign.builder().retryer(retryer);
 		}

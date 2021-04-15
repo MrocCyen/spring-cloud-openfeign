@@ -19,6 +19,8 @@ package org.springframework.cloud.openfeign.clientconfig;
 /**
  * Additional Feign Client configuration that are not included in
  * {@link org.springframework.cloud.openfeign.FeignClient}.
+ * <p>
+ * todo 在@FeignClient没有的属性配置，用户可以自己定义
  *
  * @author Matt King
  */
@@ -26,6 +28,8 @@ public interface FeignClientConfigurer {
 
 	/**
 	 * @return whether to mark the feign proxy as a primary bean. Defaults to true.
+	 * <p>
+	 * 是否feign代理对象是主要的bean，默认是true
 	 */
 	default boolean primary() {
 		return true;
@@ -36,7 +40,10 @@ public interface FeignClientConfigurer {
 	 * <code>configuration()</code>. Will still use parent instance of
 	 * {@link feign.codec.Decoder}, {@link feign.codec.Encoder}, and
 	 * {@link feign.Contract} if none are provided.
+	 *
 	 * @return weather to inherit parent context for client configuration.
+	 * <p>
+	 * 表示是否继承父级的配置，true表示可以使用
 	 */
 	default boolean inheritParentConfiguration() {
 		return true;

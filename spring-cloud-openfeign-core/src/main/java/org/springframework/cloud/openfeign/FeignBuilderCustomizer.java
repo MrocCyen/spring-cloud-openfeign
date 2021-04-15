@@ -20,12 +20,17 @@ import feign.Feign;
 
 /**
  * Allows application to customize the Feign builder.
+ * <p>
+ * 允许用户自定义处理Feign builder
  *
  * @author Matt King
  */
 @FunctionalInterface
 public interface FeignBuilderCustomizer {
 
+	/**
+	 * 允许用户自定义处理Feign builder
+	 */
 	void customize(Feign.Builder builder);
 
 }
