@@ -30,14 +30,18 @@ import feign.Response;
 import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
 
 /**
+ * 封装真实请求的client
+ *
  * @author Dave Syer
  * @author Olga Maciaszek-Sharma
- *
  */
 public class LoadBalancerFeignClient implements Client {
 
 	static final Request.Options DEFAULT_OPTIONS = new Request.Options();
 
+	/**
+	 * 代理，实际执行的是这个client
+	 */
 	private final Client delegate;
 
 	private CachingSpringLoadBalancerFactory lbClientFactory;
@@ -45,8 +49,8 @@ public class LoadBalancerFeignClient implements Client {
 	private SpringClientFactory clientFactory;
 
 	public LoadBalancerFeignClient(Client delegate,
-			CachingSpringLoadBalancerFactory lbClientFactory,
-			SpringClientFactory clientFactory) {
+	                               CachingSpringLoadBalancerFactory lbClientFactory,
+	                               SpringClientFactory clientFactory) {
 		this.delegate = delegate;
 		this.lbClientFactory = lbClientFactory;
 		this.clientFactory = clientFactory;
@@ -56,15 +60,14 @@ public class LoadBalancerFeignClient implements Client {
 		String newUrl = originalUrl;
 		if (originalUrl.startsWith("https://")) {
 			newUrl = originalUrl.substring(0, 8)
-					+ originalUrl.substring(8 + host.length());
-		}
-		else if (originalUrl.startsWith("http")) {
+				+ originalUrl.substring(8 + host.length());
+		} else if (originalUrl.startsWith("http")) {
 			newUrl = originalUrl.substring(0, 7)
-					+ originalUrl.substring(7 + host.length());
+				+ originalUrl.substring(7 + host.length());
 		}
 		StringBuffer buffer = new StringBuffer(newUrl);
 		if ((newUrl.startsWith("https://") && newUrl.length() == 8)
-				|| (newUrl.startsWith("http://") && newUrl.length() == 7)) {
+			|| (newUrl.startsWith("http://") && newUrl.length() == 7)) {
 			buffer.append("/");
 		}
 		return URI.create(buffer.toString());
@@ -76,14 +79,11 @@ public class LoadBalancerFeignClient implements Client {
 			URI asUri = URI.create(request.url());
 			String clientName = asUri.getHost();
 			URI uriWithoutHost = cleanUrl(request.url(), clientName);
-			FeignLoadBalancer.RibbonRequest ribbonRequest = new FeignLoadBalancer.RibbonRequest(
-					this.delegate, request, uriWithoutHost);
+			FeignLoadBalancer.RibbonRequest ribbonRequest = new FeignLoadBalancer.RibbonRequest(this.delegate, request, uriWithoutHost);
 
 			IClientConfig requestConfig = getClientConfig(options, clientName);
-			return lbClient(clientName)
-					.executeWithLoadBalancer(ribbonRequest, requestConfig).toResponse();
-		}
-		catch (ClientException e) {
+			return lbClient(clientName).executeWithLoadBalancer(ribbonRequest, requestConfig).toResponse();
+		} catch (ClientException e) {
 			IOException io = findIOException(e);
 			if (io != null) {
 				throw io;
@@ -96,8 +96,7 @@ public class LoadBalancerFeignClient implements Client {
 		IClientConfig requestConfig;
 		if (options == DEFAULT_OPTIONS) {
 			requestConfig = this.clientFactory.getClientConfig(clientName);
-		}
-		else {
+		} else {
 			requestConfig = new FeignOptionsClientConfig(options);
 		}
 		return requestConfig;
@@ -125,10 +124,10 @@ public class LoadBalancerFeignClient implements Client {
 
 		FeignOptionsClientConfig(Request.Options options) {
 			setProperty(CommonClientConfigKey.ConnectTimeout,
-					options.connectTimeoutMillis());
+				options.connectTimeoutMillis());
 			setProperty(CommonClientConfigKey.ReadTimeout, options.readTimeoutMillis());
 			setProperty(CommonClientConfigKey.FollowRedirects,
-					options.isFollowRedirects());
+				options.isFollowRedirects());
 		}
 
 		@Override

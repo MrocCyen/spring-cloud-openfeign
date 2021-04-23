@@ -29,12 +29,14 @@ import org.springframework.context.annotation.Configuration;
 @Configuration(proxyBeanMethods = false)
 class DefaultFeignLoadBalancedConfiguration {
 
+	/**
+	 * 如果不做任何配置的话，默认是使用这个Client.Default来进行请求的
+	 */
 	@Bean
 	@ConditionalOnMissingBean
 	public Client feignClient(CachingSpringLoadBalancerFactory cachingFactory,
-			SpringClientFactory clientFactory) {
-		return new LoadBalancerFeignClient(new Client.Default(null, null), cachingFactory,
-				clientFactory);
+	                          SpringClientFactory clientFactory) {
+		return new LoadBalancerFeignClient(new Client.Default(null, null), cachingFactory, clientFactory);
 	}
 
 }
