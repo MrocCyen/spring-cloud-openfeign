@@ -37,8 +37,10 @@ public class FeignRetryPolicy extends InterceptorRetryPolicy {
 
 	private String serviceId;
 
-	public FeignRetryPolicy(HttpRequest request, LoadBalancedRetryPolicy policy,
-			ServiceInstanceChooser serviceInstanceChooser, String serviceName) {
+	public FeignRetryPolicy(HttpRequest request,
+	                        LoadBalancedRetryPolicy policy,
+	                        ServiceInstanceChooser serviceInstanceChooser,
+	                        String serviceName) {
 		super(request, policy, serviceInstanceChooser, serviceName);
 		this.request = request;
 		this.serviceId = serviceName;
@@ -73,10 +75,9 @@ public class FeignRetryPolicy extends InterceptorRetryPolicy {
 		 * request object still has the service id so we choose and set the service
 		 * instance later on.
 		 */
-		LoadBalancedRetryContext context = new LoadBalancedRetryContext(parent,
-				this.request);
-		context.setServiceInstance(
-				new FeignRetryPolicyServiceInstance(this.serviceId, this.request));
+		LoadBalancedRetryContext context = new LoadBalancedRetryContext(parent, this.request);
+		context.setServiceInstance(new FeignRetryPolicyServiceInstance(this.serviceId, this.request));
+
 		return context;
 	}
 

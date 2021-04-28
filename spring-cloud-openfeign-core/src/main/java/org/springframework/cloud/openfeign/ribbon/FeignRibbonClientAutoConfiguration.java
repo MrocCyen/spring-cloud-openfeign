@@ -38,41 +38,42 @@ import org.springframework.context.annotation.Primary;
 /**
  * Autoconfiguration to be activated if Feign is in use and needs to be use Ribbon as a
  * load balancer.
+ * <p>
+ * todo spring.cloud.loadbalancer.ribbon.enabled = true，开启ribbon负载均衡
  *
  * @author Dave Syer
  * @author Olga Maciaszek-Sharma
  * @author Nguyen Ky Thanh
  */
-@ConditionalOnClass({ ILoadBalancer.class, Feign.class })
-@ConditionalOnProperty(value = "spring.cloud.loadbalancer.ribbon.enabled",
-		matchIfMissing = true)
+@ConditionalOnClass({ILoadBalancer.class, Feign.class})
+@ConditionalOnProperty(value = "spring.cloud.loadbalancer.ribbon.enabled", matchIfMissing = true)
 @Configuration(proxyBeanMethods = false)
+//主要注入Targeter
 @AutoConfigureBefore(FeignAutoConfiguration.class)
-@EnableConfigurationProperties({ FeignHttpClientProperties.class })
+@EnableConfigurationProperties({FeignHttpClientProperties.class})
 // Order is important here, last should be the default, first should be optional
 // see
 // https://github.com/spring-cloud/spring-cloud-netflix/issues/2086#issuecomment-316281653
-@Import({ HttpClientFeignLoadBalancedConfiguration.class,
-		OkHttpFeignLoadBalancedConfiguration.class,
-		HttpClient5FeignLoadBalancedConfiguration.class,
-		DefaultFeignLoadBalancedConfiguration.class })
+@Import({HttpClientFeignLoadBalancedConfiguration.class, OkHttpFeignLoadBalancedConfiguration.class,
+	HttpClient5FeignLoadBalancedConfiguration.class, DefaultFeignLoadBalancedConfiguration.class})
 public class FeignRibbonClientAutoConfiguration {
 
+	//classpath中没有org.springframework.retry.support.RetryTemplate则实例该bean
 	@Bean
 	@Primary
 	@ConditionalOnMissingBean
 	@ConditionalOnMissingClass("org.springframework.retry.support.RetryTemplate")
-	public CachingSpringLoadBalancerFactory cachingLBClientFactory(
-			SpringClientFactory factory) {
+	public CachingSpringLoadBalancerFactory cachingLBClientFactory(SpringClientFactory factory) {
 		return new CachingSpringLoadBalancerFactory(factory);
 	}
 
+	//classpath中有org.springframework.retry.support.RetryTemplate则实例该bean
 	@Bean
 	@Primary
 	@ConditionalOnMissingBean
 	@ConditionalOnClass(name = "org.springframework.retry.support.RetryTemplate")
-	public CachingSpringLoadBalancerFactory retryabeCachingLBClientFactory(
-			SpringClientFactory factory, LoadBalancedRetryFactory retryFactory) {
+	public CachingSpringLoadBalancerFactory retryabeCachingLBClientFactory(SpringClientFactory factory,
+	                                                                       LoadBalancedRetryFactory retryFactory) {
 		return new CachingSpringLoadBalancerFactory(factory, retryFactory);
 	}
 

@@ -54,7 +54,7 @@ import static org.springframework.cloud.netflix.ribbon.RibbonUtils.updateToSecur
  * @author Olga Maciaszek-Sharma
  */
 public class FeignLoadBalancer extends
-		AbstractLoadBalancerAwareClient<FeignLoadBalancer.RibbonRequest, FeignLoadBalancer.RibbonResponse> {
+	AbstractLoadBalancerAwareClient<FeignLoadBalancer.RibbonRequest, FeignLoadBalancer.RibbonResponse> {
 
 	private final RibbonProperties ribbon;
 
@@ -68,8 +68,9 @@ public class FeignLoadBalancer extends
 
 	protected boolean followRedirects;
 
-	public FeignLoadBalancer(ILoadBalancer lb, IClientConfig clientConfig,
-			ServerIntrospector serverIntrospector) {
+	public FeignLoadBalancer(ILoadBalancer lb,
+	                         IClientConfig clientConfig,
+	                         ServerIntrospector serverIntrospector) {
 		super(lb, clientConfig);
 		setRetryHandler(RetryHandler.DEFAULT);
 		this.clientConfig = clientConfig;
@@ -83,17 +84,16 @@ public class FeignLoadBalancer extends
 
 	@Override
 	public RibbonResponse execute(RibbonRequest request, IClientConfig configOverride)
-			throws IOException {
+		throws IOException {
 		Request.Options options;
 		if (configOverride != null) {
 			RibbonProperties override = RibbonProperties.from(configOverride);
 			options = new Request.Options(override.connectTimeout(connectTimeout),
-					TimeUnit.MILLISECONDS, override.readTimeout(readTimeout),
-					TimeUnit.MILLISECONDS, override.isFollowRedirects(followRedirects));
-		}
-		else {
+				TimeUnit.MILLISECONDS, override.readTimeout(readTimeout),
+				TimeUnit.MILLISECONDS, override.isFollowRedirects(followRedirects));
+		} else {
 			options = new Request.Options(connectTimeout, TimeUnit.MILLISECONDS,
-					readTimeout, TimeUnit.MILLISECONDS, followRedirects);
+				readTimeout, TimeUnit.MILLISECONDS, followRedirects);
 		}
 		Response response = request.client().execute(request.toRequest(), options);
 		return new RibbonResponse(request.getUri(), response);
@@ -101,25 +101,24 @@ public class FeignLoadBalancer extends
 
 	@Override
 	public RequestSpecificRetryHandler getRequestSpecificRetryHandler(
-			RibbonRequest request, IClientConfig requestConfig) {
+		RibbonRequest request, IClientConfig requestConfig) {
 		if (ribbon.isOkToRetryOnAllOperations()) {
 			return new RequestSpecificRetryHandler(true, true, getRetryHandler(),
-					requestConfig);
+				requestConfig);
 		}
 		if (!request.toRequest().httpMethod().name().equals("GET")) {
 			return new RequestSpecificRetryHandler(true, false, getRetryHandler(),
-					requestConfig);
-		}
-		else {
+				requestConfig);
+		} else {
 			return new RequestSpecificRetryHandler(true, true, getRetryHandler(),
-					requestConfig);
+				requestConfig);
 		}
 	}
 
 	@Override
 	public URI reconstructURIWithServer(Server server, URI original) {
 		URI uri = updateToSecureConnectionIfNeeded(original, clientConfig,
-				serverIntrospector, server);
+			serverIntrospector, server);
 		return super.reconstructURIWithServer(server, uri);
 	}
 
@@ -137,9 +136,9 @@ public class FeignLoadBalancer extends
 
 		private Request toRequest(Request request) {
 			Map<String, Collection<String>> headers = new LinkedHashMap<>(
-					request.headers());
+				request.headers());
 			return Request.create(request.httpMethod(), getUri().toASCIIString(), headers,
-					request.body(), request.charset(), request.requestTemplate());
+				request.body(), request.charset(), request.requestTemplate());
 		}
 
 		Request toRequest() {
@@ -155,7 +154,7 @@ public class FeignLoadBalancer extends
 				@Override
 				public HttpMethod getMethod() {
 					return HttpMethod
-							.resolve(RibbonRequest.this.toRequest().httpMethod().name());
+						.resolve(RibbonRequest.this.toRequest().httpMethod().name());
 				}
 
 				@Override
@@ -172,7 +171,7 @@ public class FeignLoadBalancer extends
 				public HttpHeaders getHeaders() {
 					Map<String, List<String>> headers = new HashMap<>();
 					Map<String, Collection<String>> feignHeaders = RibbonRequest.this
-							.toRequest().headers();
+						.toRequest().headers();
 					for (String key : feignHeaders.keySet()) {
 						headers.put(key, new ArrayList<>(feignHeaders.get(key)));
 					}

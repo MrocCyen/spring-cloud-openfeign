@@ -41,7 +41,8 @@ class OkHttpFeignLoadBalancedConfiguration {
 	@Bean
 	@ConditionalOnMissingBean(Client.class)
 	public Client feignClient(CachingSpringLoadBalancerFactory cachingFactory,
-			SpringClientFactory clientFactory, okhttp3.OkHttpClient okHttpClient) {
+	                          SpringClientFactory clientFactory,
+	                          okhttp3.OkHttpClient okHttpClient) {
 		OkHttpClient delegate = new OkHttpClient(okHttpClient);
 		return new LoadBalancerFeignClient(delegate, cachingFactory, clientFactory);
 	}

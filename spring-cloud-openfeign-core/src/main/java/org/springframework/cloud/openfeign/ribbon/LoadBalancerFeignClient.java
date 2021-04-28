@@ -59,17 +59,16 @@ public class LoadBalancerFeignClient implements Client {
 	static URI cleanUrl(String originalUrl, String host) {
 		String newUrl = originalUrl;
 		if (originalUrl.startsWith("https://")) {
-			newUrl = originalUrl.substring(0, 8)
-				+ originalUrl.substring(8 + host.length());
+			newUrl = originalUrl.substring(0, 8) + originalUrl.substring(8 + host.length());
 		} else if (originalUrl.startsWith("http")) {
-			newUrl = originalUrl.substring(0, 7)
-				+ originalUrl.substring(7 + host.length());
+			newUrl = originalUrl.substring(0, 7) + originalUrl.substring(7 + host.length());
 		}
 		StringBuffer buffer = new StringBuffer(newUrl);
 		if ((newUrl.startsWith("https://") && newUrl.length() == 8)
 			|| (newUrl.startsWith("http://") && newUrl.length() == 7)) {
 			buffer.append("/");
 		}
+
 		return URI.create(buffer.toString());
 	}
 
@@ -79,9 +78,10 @@ public class LoadBalancerFeignClient implements Client {
 			URI asUri = URI.create(request.url());
 			String clientName = asUri.getHost();
 			URI uriWithoutHost = cleanUrl(request.url(), clientName);
-			FeignLoadBalancer.RibbonRequest ribbonRequest = new FeignLoadBalancer.RibbonRequest(this.delegate, request, uriWithoutHost);
 
+			FeignLoadBalancer.RibbonRequest ribbonRequest = new FeignLoadBalancer.RibbonRequest(this.delegate, request, uriWithoutHost);
 			IClientConfig requestConfig = getClientConfig(options, clientName);
+
 			return lbClient(clientName).executeWithLoadBalancer(ribbonRequest, requestConfig).toResponse();
 		} catch (ClientException e) {
 			IOException io = findIOException(e);
@@ -123,11 +123,9 @@ public class LoadBalancerFeignClient implements Client {
 	static class FeignOptionsClientConfig extends DefaultClientConfigImpl {
 
 		FeignOptionsClientConfig(Request.Options options) {
-			setProperty(CommonClientConfigKey.ConnectTimeout,
-				options.connectTimeoutMillis());
+			setProperty(CommonClientConfigKey.ConnectTimeout, options.connectTimeoutMillis());
 			setProperty(CommonClientConfigKey.ReadTimeout, options.readTimeoutMillis());
-			setProperty(CommonClientConfigKey.FollowRedirects,
-				options.isFollowRedirects());
+			setProperty(CommonClientConfigKey.FollowRedirects, options.isFollowRedirects());
 		}
 
 		@Override

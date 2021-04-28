@@ -49,14 +49,14 @@ import org.springframework.util.StreamUtils;
  * @author Ryan Baxter
  * @author Gang Li
  */
-public class RetryableFeignLoadBalancer extends FeignLoadBalancer
-		implements ServiceInstanceChooser {
+public class RetryableFeignLoadBalancer extends FeignLoadBalancer implements ServiceInstanceChooser {
 
 	private final LoadBalancedRetryFactory loadBalancedRetryFactory;
 
-	public RetryableFeignLoadBalancer(ILoadBalancer lb, IClientConfig clientConfig,
-			ServerIntrospector serverIntrospector,
-			LoadBalancedRetryFactory loadBalancedRetryFactory) {
+	public RetryableFeignLoadBalancer(ILoadBalancer lb,
+	                                  IClientConfig clientConfig,
+	                                  ServerIntrospector serverIntrospector,
+	                                  LoadBalancedRetryFactory loadBalancedRetryFactory) {
 		super(lb, clientConfig, serverIntrospector);
 		this.loadBalancedRetryFactory = loadBalancedRetryFactory;
 		this.setRetryHandler(new DefaultLoadBalancerRetryHandler(clientConfig));
@@ -64,57 +64,52 @@ public class RetryableFeignLoadBalancer extends FeignLoadBalancer
 
 	@Override
 	public RibbonResponse execute(final RibbonRequest request,
-			IClientConfig configOverride) throws IOException {
+	                              IClientConfig configOverride) throws IOException {
 		final Request.Options options;
 		if (configOverride != null) {
 			RibbonProperties ribbon = RibbonProperties.from(configOverride);
 			options = new Request.Options(ribbon.connectTimeout(this.connectTimeout),
-					ribbon.readTimeout(this.readTimeout));
-		}
-		else {
+				ribbon.readTimeout(this.readTimeout));
+		} else {
 			options = new Request.Options(this.connectTimeout, this.readTimeout);
 		}
-		final LoadBalancedRetryPolicy retryPolicy = this.loadBalancedRetryFactory
-				.createRetryPolicy(this.getClientName(), this);
+		final LoadBalancedRetryPolicy retryPolicy = this.loadBalancedRetryFactory.createRetryPolicy(this.getClientName(), this);
 		RetryTemplate retryTemplate = new RetryTemplate();
-		BackOffPolicy backOffPolicy = this.loadBalancedRetryFactory
-				.createBackOffPolicy(this.getClientName());
-		retryTemplate.setBackOffPolicy(
-				backOffPolicy == null ? new NoBackOffPolicy() : backOffPolicy);
-		RetryListener[] retryListeners = this.loadBalancedRetryFactory
-				.createRetryListeners(this.getClientName());
+		BackOffPolicy backOffPolicy = this.loadBalancedRetryFactory.createBackOffPolicy(this.getClientName());
+		retryTemplate.setBackOffPolicy(backOffPolicy == null ? new NoBackOffPolicy() : backOffPolicy);
+		RetryListener[] retryListeners = this.loadBalancedRetryFactory.createRetryListeners(this.getClientName());
 		if (retryListeners != null && retryListeners.length != 0) {
 			retryTemplate.setListeners(retryListeners);
 		}
-		retryTemplate.setRetryPolicy(retryPolicy == null ? new NeverRetryPolicy()
-				: new FeignRetryPolicy(request.toHttpRequest(), retryPolicy, this,
-						this.getClientName()));
+		retryTemplate.setRetryPolicy(retryPolicy == null
+			? new NeverRetryPolicy()
+			: new FeignRetryPolicy(request.toHttpRequest(), retryPolicy, this,
+			this.getClientName()));
 		return retryTemplate.execute(retryContext -> {
 			Request feignRequest = null;
 			// on retries the policy will choose the server and set it in the context
 			// extract the server and update the request being made
 			if (retryContext instanceof LoadBalancedRetryContext) {
 				ServiceInstance service = ((LoadBalancedRetryContext) retryContext)
-						.getServiceInstance();
+					.getServiceInstance();
 				if (service != null) {
 					feignRequest = ((RibbonRequest) request
-							.replaceUri(reconstructURIWithServer(
-									new Server(service.getHost(), service.getPort()),
-									request.getUri()))).toRequest();
+						.replaceUri(reconstructURIWithServer(
+							new Server(service.getHost(), service.getPort()),
+							request.getUri()))).toRequest();
 				}
 			}
 			if (feignRequest == null) {
 				feignRequest = request.toRequest();
 			}
 			Response response = request.client().execute(feignRequest, options);
-			if (retryPolicy != null
-					&& retryPolicy.retryableStatusCode(response.status())) {
-				byte[] byteArray = response.body() == null ? new byte[] {}
-						: StreamUtils.copyToByteArray(response.body().asInputStream());
+			if (retryPolicy != null && retryPolicy.retryableStatusCode(response.status())) {
+				byte[] byteArray = response.body() == null
+					? new byte[]{}
+					: StreamUtils.copyToByteArray(response.body().asInputStream());
 				response.close();
-				throw new RibbonResponseStatusCodeException(
-						RetryableFeignLoadBalancer.this.clientName, response, byteArray,
-						request.getUri());
+				throw new RibbonResponseStatusCodeException(RetryableFeignLoadBalancer.this.clientName, response, byteArray,
+					request.getUri());
 			}
 			return new RibbonResponse(request.getUri(), response);
 		}, new LoadBalancedRecoveryCallback<RibbonResponse, Response>() {
@@ -127,15 +122,15 @@ public class RetryableFeignLoadBalancer extends FeignLoadBalancer
 
 	@Override
 	public RequestSpecificRetryHandler getRequestSpecificRetryHandler(
-			FeignLoadBalancer.RibbonRequest request, IClientConfig requestConfig) {
+		FeignLoadBalancer.RibbonRequest request, IClientConfig requestConfig) {
 		return new RequestSpecificRetryHandler(false, false, this.getRetryHandler(),
-				requestConfig);
+			requestConfig);
 	}
 
 	@Override
 	public ServiceInstance choose(String serviceId) {
 		return new RibbonLoadBalancerClient.RibbonServer(serviceId,
-				this.getLoadBalancer().chooseServer(serviceId));
+			this.getLoadBalancer().chooseServer(serviceId));
 	}
 
 }

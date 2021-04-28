@@ -322,8 +322,7 @@ public class FeignAutoConfiguration {
 
 		@Bean
 		@ConditionalOnMissingBean(Client.class)
-		public Client feignClient(
-			org.apache.hc.client5.http.impl.classic.CloseableHttpClient httpClient5) {
+		public Client feignClient(org.apache.hc.client5.http.impl.classic.CloseableHttpClient httpClient5) {
 			return new ApacheHttp5Client(httpClient5);
 		}
 

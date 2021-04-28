@@ -36,6 +36,8 @@ import org.springframework.context.annotation.Import;
  * implementations of {@link Client}. In order to use this load-balancing mechanism, the
  * Ribbon-based implementation has to be disabled by setting
  * <code>spring.cloud.loadbalancer.ribbon.enabled</code> to <code>true</code>.
+ * <p>
+ * todo spring.cloud.loadbalancer.ribbon.enabled = true，开启ribbon负载均衡
  *
  * @author Olga Maciaszek-Sharma
  * @author Nguyen Ky Thanh
@@ -43,7 +45,9 @@ import org.springframework.context.annotation.Import;
  */
 @ConditionalOnClass(Feign.class)
 @ConditionalOnBean(BlockingLoadBalancerClient.class)
+//主要注入Targeter
 @AutoConfigureBefore(FeignAutoConfiguration.class)
+//如果FeignRibbonClientAutoConfiguration已经注入相关的bean，则import的配置类中的bean则不会注入
 @AutoConfigureAfter(FeignRibbonClientAutoConfiguration.class)
 @EnableConfigurationProperties(FeignHttpClientProperties.class)
 @Configuration(proxyBeanMethods = false)

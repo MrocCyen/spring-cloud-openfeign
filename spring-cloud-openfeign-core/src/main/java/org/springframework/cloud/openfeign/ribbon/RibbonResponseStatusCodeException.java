@@ -32,13 +32,15 @@ public class RibbonResponseStatusCodeException extends RetryableStatusCodeExcept
 
 	private final Response response;
 
-	public RibbonResponseStatusCodeException(String serviceId, Response response,
-			byte[] body, URI uri) {
+	public RibbonResponseStatusCodeException(String serviceId,
+	                                         Response response,
+	                                         byte[] body,
+	                                         URI uri) {
 		super(serviceId, response.status(), response, uri);
 		this.response = Response.builder()
-				.body(new ByteArrayInputStream(body), body.length)
-				.headers(response.headers()).reason(response.reason())
-				.status(response.status()).request(response.request()).build();
+			.body(new ByteArrayInputStream(body), body.length)
+			.headers(response.headers()).reason(response.reason())
+			.status(response.status()).request(response.request()).build();
 	}
 
 	@Override

@@ -46,8 +46,10 @@ class HttpClientFeignLoadBalancedConfiguration {
 	@Bean
 	@ConditionalOnMissingBean(Client.class)
 	public Client feignClient(CachingSpringLoadBalancerFactory cachingFactory,
-			SpringClientFactory clientFactory, HttpClient httpClient) {
+	                          SpringClientFactory clientFactory,
+	                          HttpClient httpClient) {
 		ApacheHttpClient delegate = new ApacheHttpClient(httpClient);
+
 		return new LoadBalancerFeignClient(delegate, cachingFactory, clientFactory);
 	}
 
