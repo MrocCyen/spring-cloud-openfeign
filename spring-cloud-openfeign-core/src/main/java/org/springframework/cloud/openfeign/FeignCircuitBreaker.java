@@ -67,19 +67,16 @@ public final class FeignCircuitBreaker {
 		}
 
 		public <T> T target(Target<T> target, T fallback) {
-			return build(fallback != null ? new FallbackFactory.Default<>(fallback) : null)
-				.newInstance(target);
+			return build(fallback != null ? new FallbackFactory.Default<>(fallback) : null).newInstance(target);
 		}
 
 		public <T> T target(Target<T> target, FallbackFactory<? extends T> fallbackFactory) {
-			return build(fallbackFactory)
-				.newInstance(target);
+			return build(fallbackFactory).newInstance(target);
 		}
 
 		@Override
 		public <T> T target(Target<T> target) {
-			return build(null)
-				.newInstance(target);
+			return build(null).newInstance(target);
 		}
 
 		//设置invocationHandlerFactory

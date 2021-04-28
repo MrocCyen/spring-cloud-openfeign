@@ -91,6 +91,7 @@ class FeignCircuitBreakerInvocationHandler implements InvocationHandler {
 		CircuitBreaker circuitBreaker = this.factory.create(circuitName);
 		//应用器
 		Supplier<Object> supplier = asSupplier(method, args);
+		//如果在@FeignClient中设置了fallback或者是fallBackFactory，则直接执行下面的逻辑
 		if (this.nullableFallbackFactory != null) {
 			Function<Throwable, Object> fallbackFunction = throwable -> {
 				Object fallback = this.nullableFallbackFactory.create(throwable);
@@ -100,8 +101,10 @@ class FeignCircuitBreakerInvocationHandler implements InvocationHandler {
 					throw new IllegalStateException(e);
 				}
 			};
+
 			return circuitBreaker.run(supplier, fallbackFunction);
 		}
+
 		return circuitBreaker.run(supplier);
 	}
 

@@ -41,17 +41,21 @@ class FeignCircuitBreakerTargeter implements Targeter {
 			return feign.target(target);
 		}
 		FeignCircuitBreaker.Builder builder = (FeignCircuitBreaker.Builder) feign;
-		String name = !StringUtils.hasText(factory.getContextId()) ? factory.getName()
+		//获取名字
+		String name = !StringUtils.hasText(factory.getContextId())
+			? factory.getName()
 			: factory.getContextId();
+		//是否有设置fallBack属性
 		Class<?> fallback = factory.getFallback();
 		if (fallback != void.class) {
 			return targetWithFallback(name, context, target, builder, fallback);
 		}
+		//有设置fallbackFactory属性
 		Class<?> fallbackFactory = factory.getFallbackFactory();
 		if (fallbackFactory != void.class) {
-			return targetWithFallbackFactory(name, context, target, builder,
-				fallbackFactory);
+			return targetWithFallbackFactory(name, context, target, builder, fallbackFactory);
 		}
+
 		return builder(name, builder).target(target);
 	}
 
@@ -61,8 +65,8 @@ class FeignCircuitBreakerTargeter implements Targeter {
 	                                        FeignCircuitBreaker.Builder builder,
 	                                        Class<?> fallbackFactoryClass) {
 		FallbackFactory<? extends T> fallbackFactory = (FallbackFactory<? extends T>) getFromContext(
-			"fallbackFactory", feignClientName, context, fallbackFactoryClass,
-			FallbackFactory.class);
+			"fallbackFactory", feignClientName, context, fallbackFactoryClass, FallbackFactory.class);
+
 		return builder(feignClientName, builder).target(target, fallbackFactory);
 	}
 
@@ -71,8 +75,8 @@ class FeignCircuitBreakerTargeter implements Targeter {
 	                                 Target.HardCodedTarget<T> target,
 	                                 FeignCircuitBreaker.Builder builder,
 	                                 Class<?> fallback) {
-		T fallbackInstance = getFromContext("fallback", feignClientName, context,
-			fallback, target.type());
+		T fallbackInstance = getFromContext("fallback", feignClientName, context, fallback, target.type());
+
 		return builder(feignClientName, builder).target(target, fallbackInstance);
 	}
 
