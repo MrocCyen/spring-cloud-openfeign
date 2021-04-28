@@ -85,8 +85,11 @@ class FeignCircuitBreakerInvocationHandler implements InvocationHandler {
 		} else if ("toString".equals(method.getName())) {
 			return toString();
 		}
+		//获取configKey
 		String circuitName = Feign.configKey(target.type(), method);
+		//获取断路器
 		CircuitBreaker circuitBreaker = this.factory.create(circuitName);
+		//应用器
 		Supplier<Object> supplier = asSupplier(method, args);
 		if (this.nullableFallbackFactory != null) {
 			Function<Throwable, Object> fallbackFunction = throwable -> {

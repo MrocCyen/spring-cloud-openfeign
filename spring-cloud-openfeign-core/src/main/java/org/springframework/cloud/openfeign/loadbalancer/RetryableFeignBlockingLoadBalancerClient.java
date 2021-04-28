@@ -57,7 +57,7 @@ import org.springframework.retry.support.RetryTemplate;
 public class RetryableFeignBlockingLoadBalancerClient implements Client {
 
 	private static final Log LOG = LogFactory
-			.getLog(FeignBlockingLoadBalancerClient.class);
+		.getLog(FeignBlockingLoadBalancerClient.class);
 
 	private final Client delegate;
 
@@ -66,8 +66,8 @@ public class RetryableFeignBlockingLoadBalancerClient implements Client {
 	private final LoadBalancedRetryFactory loadBalancedRetryFactory;
 
 	public RetryableFeignBlockingLoadBalancerClient(Client delegate,
-			BlockingLoadBalancerClient loadBalancerClient,
-			LoadBalancedRetryFactory loadBalancedRetryFactory) {
+	                                                BlockingLoadBalancerClient loadBalancerClient,
+	                                                LoadBalancedRetryFactory loadBalancedRetryFactory) {
 		this.delegate = delegate;
 		this.loadBalancerClient = loadBalancerClient;
 		this.loadBalancedRetryFactory = loadBalancedRetryFactory;
@@ -77,8 +77,7 @@ public class RetryableFeignBlockingLoadBalancerClient implements Client {
 	public Response execute(Request request, Request.Options options) throws IOException {
 		final URI originalUri = URI.create(request.url());
 		String serviceId = originalUri.getHost();
-		final LoadBalancedRetryPolicy retryPolicy = loadBalancedRetryFactory
-				.createRetryPolicy(serviceId, loadBalancerClient);
+		final LoadBalancedRetryPolicy retryPolicy = loadBalancedRetryFactory.createRetryPolicy(serviceId, loadBalancerClient);
 		RetryTemplate retryTemplate = buildRetryTemplate(serviceId, request, retryPolicy);
 		return retryTemplate.execute(context -> {
 			Request feignRequest = null;
@@ -86,22 +85,22 @@ public class RetryableFeignBlockingLoadBalancerClient implements Client {
 			// and extract the server and update the request being made
 			if (context instanceof LoadBalancedRetryContext) {
 				ServiceInstance serviceInstance = ((LoadBalancedRetryContext) context)
-						.getServiceInstance();
+					.getServiceInstance();
 				if (serviceInstance != null) {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug(String.format(
-								"Using service instance from LoadBalancedRetryContext: %s",
-								serviceInstance));
+							"Using service instance from LoadBalancedRetryContext: %s",
+							serviceInstance));
 					}
 					String reconstructedUrl = loadBalancerClient
-							.reconstructURI(serviceInstance, originalUri).toString();
+						.reconstructURI(serviceInstance, originalUri).toString();
 					feignRequest = buildRequest(request, reconstructedUrl);
 				}
 			}
 			if (feignRequest == null) {
 				if (LOG.isWarnEnabled()) {
 					LOG.warn(
-							"Service instance was not resolved, executing the original request");
+						"Service instance was not resolved, executing the original request");
 				}
 				feignRequest = request;
 			}
@@ -110,11 +109,11 @@ public class RetryableFeignBlockingLoadBalancerClient implements Client {
 			if (retryPolicy != null && retryPolicy.retryableStatusCode(responseStatus)) {
 				if (LOG.isDebugEnabled()) {
 					LOG.debug(
-							String.format("Retrying on status code: %d", responseStatus));
+						String.format("Retrying on status code: %d", responseStatus));
 				}
 				response.close();
 				throw new RetryableStatusCodeException(serviceId, responseStatus,
-						response, URI.create(request.url()));
+					response, URI.create(request.url()));
 			}
 			return response;
 		}, new LoadBalancedRecoveryCallback<Response, Response>() {
@@ -127,25 +126,22 @@ public class RetryableFeignBlockingLoadBalancerClient implements Client {
 
 	protected Request buildRequest(Request request, String reconstructedUrl) {
 		return Request.create(request.httpMethod(), reconstructedUrl, request.headers(),
-				request.body(), request.charset(), request.requestTemplate());
+			request.body(), request.charset(), request.requestTemplate());
 	}
 
 	private RetryTemplate buildRetryTemplate(String serviceId, Request request,
-			LoadBalancedRetryPolicy retryPolicy) {
+	                                         LoadBalancedRetryPolicy retryPolicy) {
 		RetryTemplate retryTemplate = new RetryTemplate();
-		BackOffPolicy backOffPolicy = this.loadBalancedRetryFactory
-				.createBackOffPolicy(serviceId);
-		retryTemplate.setBackOffPolicy(
-				backOffPolicy == null ? new NoBackOffPolicy() : backOffPolicy);
-		RetryListener[] retryListeners = this.loadBalancedRetryFactory
-				.createRetryListeners(serviceId);
+		BackOffPolicy backOffPolicy = this.loadBalancedRetryFactory.createBackOffPolicy(serviceId);
+		retryTemplate.setBackOffPolicy(backOffPolicy == null ? new NoBackOffPolicy() : backOffPolicy);
+		RetryListener[] retryListeners = this.loadBalancedRetryFactory.createRetryListeners(serviceId);
 		if (retryListeners != null && retryListeners.length != 0) {
 			retryTemplate.setListeners(retryListeners);
 		}
 
-		retryTemplate.setRetryPolicy(retryPolicy == null ? new NeverRetryPolicy()
-				: new InterceptorRetryPolicy(toHttpRequest(request), retryPolicy,
-						loadBalancerClient, serviceId));
+		retryTemplate.setRetryPolicy(retryPolicy == null
+			? new NeverRetryPolicy()
+			: new InterceptorRetryPolicy(toHttpRequest(request), retryPolicy, loadBalancerClient, serviceId));
 		return retryTemplate;
 	}
 

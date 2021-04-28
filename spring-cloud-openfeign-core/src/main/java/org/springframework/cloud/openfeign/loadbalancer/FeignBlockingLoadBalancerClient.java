@@ -34,21 +34,28 @@ import org.springframework.util.Assert;
 /**
  * A {@link Client} implementation that uses {@link BlockingLoadBalancerClient} to select
  * a {@link ServiceInstance} to use while resolving the request host.
+ * <p>
+ * 代理真正的client
  *
  * @author Olga Maciaszek-Sharma
  * @since 2.2.0
  */
 public class FeignBlockingLoadBalancerClient implements Client {
 
-	private static final Log LOG = LogFactory
-			.getLog(FeignBlockingLoadBalancerClient.class);
+	private static final Log LOG = LogFactory.getLog(FeignBlockingLoadBalancerClient.class);
 
+	/**
+	 * 需要代理的client
+	 */
 	private final Client delegate;
 
+	/**
+	 * springcloud-commom中实现的
+	 */
 	private final BlockingLoadBalancerClient loadBalancerClient;
 
 	public FeignBlockingLoadBalancerClient(Client delegate,
-			BlockingLoadBalancerClient loadBalancerClient) {
+	                                       BlockingLoadBalancerClient loadBalancerClient) {
 		this.delegate = delegate;
 		this.loadBalancerClient = loadBalancerClient;
 	}
@@ -57,28 +64,31 @@ public class FeignBlockingLoadBalancerClient implements Client {
 	public Response execute(Request request, Request.Options options) throws IOException {
 		final URI originalUri = URI.create(request.url());
 		String serviceId = originalUri.getHost();
-		Assert.state(serviceId != null,
-				"Request URI does not contain a valid hostname: " + originalUri);
+		Assert.state(serviceId != null, "Request URI does not contain a valid hostname: " + originalUri);
+		//使用springcloud-commom中实现的负载均衡客户端进行服务实例选择
 		ServiceInstance instance = loadBalancerClient.choose(serviceId);
 		if (instance == null) {
-			String message = "Load balancer does not contain an instance for the service "
-					+ serviceId;
+			String message = "Load balancer does not contain an instance for the service " + serviceId;
 			if (LOG.isWarnEnabled()) {
 				LOG.warn(message);
 			}
+			//返回服务不可用错误
 			return Response.builder().request(request)
-					.status(HttpStatus.SERVICE_UNAVAILABLE.value())
-					.body(message, StandardCharsets.UTF_8).build();
+				.status(HttpStatus.SERVICE_UNAVAILABLE.value())
+				.body(message, StandardCharsets.UTF_8).build();
 		}
-		String reconstructedUrl = loadBalancerClient.reconstructURI(instance, originalUri)
-				.toString();
+		//重建url
+		String reconstructedUrl = loadBalancerClient.reconstructURI(instance, originalUri).toString();
+		//构造请求
 		Request newRequest = buildRequest(request, reconstructedUrl);
+
+		//执行请求
 		return delegate.execute(newRequest, options);
 	}
 
 	protected Request buildRequest(Request request, String reconstructedUrl) {
 		return Request.create(request.httpMethod(), reconstructedUrl, request.headers(),
-				request.body(), request.charset(), request.requestTemplate());
+			request.body(), request.charset(), request.requestTemplate());
 	}
 
 	// Visible for Sleuth instrumentation

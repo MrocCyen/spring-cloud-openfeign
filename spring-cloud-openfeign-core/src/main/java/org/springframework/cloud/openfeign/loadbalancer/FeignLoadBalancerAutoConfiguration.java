@@ -50,10 +50,8 @@ import org.springframework.context.annotation.Import;
 // Order is important here, last should be the default, first should be optional
 // see
 // https://github.com/spring-cloud/spring-cloud-netflix/issues/2086#issuecomment-316281653
-@Import({ HttpClientFeignLoadBalancerConfiguration.class,
-		OkHttpFeignLoadBalancerConfiguration.class,
-		HttpClient5FeignLoadBalancerConfiguration.class,
-		DefaultFeignLoadBalancerConfiguration.class })
+@Import({HttpClientFeignLoadBalancerConfiguration.class, OkHttpFeignLoadBalancerConfiguration.class,
+	HttpClient5FeignLoadBalancerConfiguration.class, DefaultFeignLoadBalancerConfiguration.class})
 public class FeignLoadBalancerAutoConfiguration {
 
 }

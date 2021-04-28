@@ -47,8 +47,7 @@ public class OnRetryNotEnabledCondition extends AnyNestedCondition {
 
 	}
 
-	@ConditionalOnProperty(value = "spring.cloud.loadbalancer.retry.enabled",
-			havingValue = "false")
+	@ConditionalOnProperty(value = "spring.cloud.loadbalancer.retry.enabled", havingValue = "false")
 	static class OnLoadBalancerRetryEnabledCondition {
 
 	}
