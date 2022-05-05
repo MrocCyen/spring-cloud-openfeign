@@ -553,6 +553,7 @@ public class SpringMvcContractTests {
 				.isEqualTo("{Authorization}");
 		assertThat(data.template().queries().get("amount").iterator().next())
 				.isEqualTo("{amount}");
+		
 	}
 
 	@Test
